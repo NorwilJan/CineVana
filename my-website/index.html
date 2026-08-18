@@ -27,11 +27,11 @@
   </div>
 
   <div class="genre-filter-bar">
-    <button class="genre-btn active" onclick="init()">All</button>
-    <button class="genre-btn" onclick="fetchByGenre(28)">Action</button>
-    <button class="genre-btn" onclick="fetchByGenre(35)">Comedy</button>
-    <button class="genre-btn" onclick="fetchByGenre(27)">Horror</button>
-    <button class="genre-btn" onclick="fetchByGenre(878)">Sci-Fi</button>
+    <button class="genre-btn active" onclick="resetHomeView(this)">All</button>
+    <button class="genre-btn" onclick="fetchByGenre(28, this)">Action</button>
+    <button class="genre-btn" onclick="fetchByGenre(35, this)">Comedy</button>
+    <button class="genre-btn" onclick="fetchByGenre(27, this)">Horror</button>
+    <button class="genre-btn" onclick="fetchByGenre(878, this)">Sci-Fi</button>
   </div>
 
   <div class="banner" id="banner">
@@ -48,12 +48,12 @@
     <div class="list" id="movies-list"></div>
   </div>
 
-  <div class="row">
+  <div class="row" id="tvshows-row">
     <h2>Trending TV Shows</h2>
     <div class="list" id="tvshows-list"></div>
   </div>
 
-  <div class="row">
+  <div class="row" id="anime-row">
     <h2>Trending Anime</h2>
     <div class="list" id="anime-list"></div>
   </div>
