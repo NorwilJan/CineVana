@@ -2,6 +2,7 @@ const API_KEY = 'c5f2e226dd2ee0c8ed2c272a0ebaf049';
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_URL = 'https://image.tmdb.org/t/p/original';
 let currentItem;
+let searchTimeout;
 
 async function fetchTrending(type) {
   const res = await fetch(`${BASE_URL}/trending/${type}/week?api_key=${API_KEY}`);
@@ -16,7 +17,7 @@ async function fetchTrendingAnime() {
     const res = await fetch(`${BASE_URL}/trending/tv/week?api_key=${API_KEY}&page=${page}`);
     const data = await res.json();
     const filtered = data.results.filter(item =>
-      item.original_language === 'ja' && item.genre_ids.includes(16)
+      item.original_language === 'ja' && item.genre_ids && item.genre_ids.includes(16)
     );
     allResults = allResults.concat(filtered);
   }
@@ -29,10 +30,13 @@ function displayBanner(item) {
   document.getElementById('banner-title').textContent = item.title || item.name;
 }
 
-function displayList(items, containerId) {
+function displayList(items, containerId, mediaType) {
   const container = document.getElementById(containerId);
   container.innerHTML = '';
   items.forEach(item => {
+    if (!item.poster_path) return;
+    if (!item.media_type) item.media_type = mediaType;
+    
     const img = document.createElement('img');
     img.src = `${IMG_URL}${item.poster_path}`;
     img.alt = item.title || item.name;
@@ -51,6 +55,7 @@ function showDetails(item) {
   loadVideo();
   
   document.getElementById('modal').style.display = 'flex';
+  document.body.classList.add('modal-open');
 }
 
 function loadVideo() {
@@ -61,7 +66,8 @@ function loadVideo() {
 
 function closeModal() {
   document.getElementById('modal').style.display = 'none';
-  document.getElementById('modal-video').src = '';
+  document.getElementById('modal-video').src = 'about:blank';
+  document.body.classList.remove('modal-open');
 }
 
 function openSearchModal() {
@@ -72,6 +78,14 @@ function openSearchModal() {
 function closeSearchModal() {
   document.getElementById('search-modal').style.display = 'none';
   document.getElementById('search-results').innerHTML = '';
+  document.getElementById('search-input').value = '';
+}
+
+function debounceSearch() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    searchTMDB();
+  }, 300);
 }
 
 async function searchTMDB() {
@@ -87,7 +101,10 @@ async function searchTMDB() {
   const container = document.getElementById('search-results');
   container.innerHTML = '';
   data.results.forEach(item => {
-    if (!item.poster_path) return;
+    if (!item.poster_path || item.media_type === 'person') return;
+    if (!item.media_type) {
+      item.media_type = item.title ? 'movie' : 'tv';
+    }
     const img = document.createElement('img');
     img.src = `${IMG_URL}${item.poster_path}`;
     img.alt = item.title || item.name;
@@ -104,10 +121,12 @@ async function init() {
   const tvShows = await fetchTrending('tv');
   const anime = await fetchTrendingAnime();
 
-  displayBanner(movies[Math.floor(Math.random() * movies.length)]);
-  displayList(movies, 'movies-list');
-  displayList(tvShows, 'tvshows-list');
-  displayList(anime, 'anime-list');
+  if (movies.length > 0) {
+    displayBanner(movies[Math.floor(Math.random() * movies.length)]);
+  }
+  displayList(movies, 'movies-list', 'movie');
+  displayList(tvShows, 'tvshows-list', 'tv');
+  displayList(anime, 'anime-list', 'tv');
 }
 
 init();
