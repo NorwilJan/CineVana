@@ -24,7 +24,10 @@
   </div>
 
   <div class="banner" id="banner">
-    <h1 id="banner-title"></h1>
+    <div class="banner-content">
+      <h1 id="banner-title"></h1>
+      <button class="banner-btn" onclick="playBanner()"><i class="fa-solid fa-play"></i> Watch Now</button>
+    </div>
   </div>
 
   <!-- CATEGORY FILTER TABS -->
@@ -33,6 +36,12 @@
     <button class="tab-btn" onclick="filterContent('movie', this)">Movies</button>
     <button class="tab-btn" onclick="filterContent('tv', this)">TV Shows</button>
     <button class="tab-btn" onclick="filterContent('anime', this)">Anime</button>
+  </div>
+
+  <!-- CONTINUE WATCHING ROW -->
+  <div class="row" id="continue-row" style="display: none;">
+    <h2>Continue Watching</h2>
+    <div class="list" id="continue-list"></div>
   </div>
 
   <!-- MY LIST ROW -->
