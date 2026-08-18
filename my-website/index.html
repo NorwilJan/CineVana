@@ -58,13 +58,13 @@
 
   <div class="search-modal" id="search-modal">
     <span class="close" onclick="closeSearchModal()" style="color: red;">&times;</span>
-    <input type="text" id="search-input" placeholder="Search for a movie or show..." oninput="searchTMDB()" />
+    <input type="text" id="search-input" placeholder="Search for a movie or show..." oninput="handleSearchInput()" />
     <div class="results" id="search-results"></div>
   </div>
 
   <footer class="footer">
     <div class="footer-content">
-      <p>&copy; 2025 My Website. All rights reserved.</p>
+      <p>&copy; <span id="copyright-year">2026</span> My Website. All rights reserved.</p>
       <div class="footer-links">
         <a href="#">Disclaimer</a>
         <a href="#">About Us</a>
