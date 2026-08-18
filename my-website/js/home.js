@@ -3,6 +3,7 @@ const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_URL = 'https://image.tmdb.org/t/p/original';
 
 let currentItem;
+let bannerItem;
 let currentSeason = 1;
 let currentEpisode = 1;
 let searchTimeout;
@@ -40,8 +41,13 @@ async function fetchKDramas() {
 }
 
 function displayBanner(item) {
+  bannerItem = item;
   document.getElementById('banner').style.backgroundImage = `url(${IMG_URL}${item.backdrop_path})`;
   document.getElementById('banner-title').textContent = item.title || item.name;
+}
+
+function playBanner() {
+  if (bannerItem) showDetails(bannerItem);
 }
 
 function displayList(items, containerId, mediaType) {
@@ -70,6 +76,7 @@ async function showDetails(item) {
   document.getElementById('modal-rating').innerHTML = '★'.repeat(Math.round(item.vote_average / 2));
   
   updateWatchlistButton();
+  addToContinueWatching(item);
 
   const isTv = currentItem.media_type === "tv" || !currentItem.title;
   const seriesOptions = document.getElementById('series-options');
@@ -219,11 +226,37 @@ function renderWatchlistRow() {
   }
 }
 
+// Continue Watching Logic
+function getContinueWatching() {
+  return JSON.parse(localStorage.getItem('continueWatching')) || [];
+}
+
+function addToContinueWatching(item) {
+  let list = getContinueWatching();
+  list = list.filter(i => i.id !== item.id);
+  list.unshift(item);
+  if (list.length > 10) list.pop(); // Keep last 10
+  localStorage.setItem('continueWatching', JSON.stringify(list));
+  renderContinueWatchingRow();
+}
+
+function renderContinueWatchingRow() {
+  const list = getContinueWatching();
+  const row = document.getElementById('continue-row');
+  if (list.length === 0) {
+    row.style.display = 'none';
+  } else {
+    row.style.display = 'block';
+    displayList(list, 'continue-list', 'movie');
+  }
+}
+
 // Category Tab Filtering
 function filterContent(category, eventElement) {
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
   eventElement.classList.add('active');
 
+  const continueRow = document.getElementById('continue-row');
   const watchlistRow = document.getElementById('watchlist-row');
   const moviesRow = document.getElementById('movies-row');
   const tvRow = document.getElementById('tvshows-row');
@@ -232,8 +265,10 @@ function filterContent(category, eventElement) {
   const kdramaRow = document.getElementById('kdrama-row');
 
   const hasWatchlist = getWatchlist().length > 0;
+  const hasContinue = getContinueWatching().length > 0;
 
   if (category === 'all') {
+    if (hasContinue) continueRow.style.display = 'block';
     if (hasWatchlist) watchlistRow.style.display = 'block';
     moviesRow.style.display = 'block';
     tvRow.style.display = 'block';
@@ -241,6 +276,7 @@ function filterContent(category, eventElement) {
     tagalogRow.style.display = 'block';
     kdramaRow.style.display = 'block';
   } else if (category === 'movie') {
+    continueRow.style.display = 'none';
     watchlistRow.style.display = 'none';
     moviesRow.style.display = 'block';
     tvRow.style.display = 'none';
@@ -248,6 +284,7 @@ function filterContent(category, eventElement) {
     tagalogRow.style.display = 'block';
     kdramaRow.style.display = 'none';
   } else if (category === 'tv') {
+    continueRow.style.display = 'none';
     watchlistRow.style.display = 'none';
     moviesRow.style.display = 'none';
     tvRow.style.display = 'block';
@@ -255,6 +292,7 @@ function filterContent(category, eventElement) {
     tagalogRow.style.display = 'none';
     kdramaRow.style.display = 'block';
   } else if (category === 'anime') {
+    continueRow.style.display = 'none';
     watchlistRow.style.display = 'none';
     moviesRow.style.display = 'none';
     tvRow.style.display = 'none';
@@ -328,6 +366,7 @@ async function init() {
   displayList(kDramas, 'kdrama-list', 'tv');
   
   renderWatchlistRow();
+  renderContinueWatchingRow();
 }
 
 init();
