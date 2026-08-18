@@ -27,23 +27,31 @@
     <h1 id="banner-title"></h1>
   </div>
 
+  <!-- CATEGORY FILTER TABS -->
+  <div class="filter-tabs">
+    <button class="tab-btn active" onclick="filterContent('all', this)">All</button>
+    <button class="tab-btn" onclick="filterContent('movie', this)">Movies</button>
+    <button class="tab-btn" onclick="filterContent('tv', this)">TV Shows</button>
+    <button class="tab-btn" onclick="filterContent('anime', this)">Anime</button>
+  </div>
+
   <!-- MY LIST ROW -->
   <div class="row" id="watchlist-row" style="display: none;">
     <h2>My List</h2>
     <div class="list" id="watchlist-list"></div>
   </div>
 
-  <div class="row">
+  <div class="row" id="movies-row">
     <h2>Trending Movies</h2>
     <div class="list" id="movies-list"></div>
   </div>
 
-  <div class="row">
+  <div class="row" id="tvshows-row">
     <h2>Trending TV Shows</h2>
     <div class="list" id="tvshows-list"></div>
   </div>
 
-  <div class="row">
+  <div class="row" id="anime-row">
     <h2>Trending Anime</h2>
     <div class="list" id="anime-list"></div>
   </div>
