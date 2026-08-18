@@ -89,6 +89,41 @@ body.modal-open { overflow: hidden; }
   color: #fff;
 }
 
+/* GENRE FILTER CHIPS */
+.genre-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 10px 15px 5px 15px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.genre-tabs::-webkit-scrollbar { display: none; }
+
+.genre-btn {
+  background: #1a1a1a;
+  color: #888;
+  border: 1px solid #333;
+  padding: 6px 14px;
+  border-radius: 15px;
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.genre-btn:hover {
+  background: #2a2a2a;
+  color: #fff;
+  border-color: #555;
+}
+
+.genre-btn.active {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+  font-weight: bold;
+}
+
 .row {
   margin: 20px 15px;
 }
