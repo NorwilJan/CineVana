@@ -27,6 +27,12 @@
     <h1 id="banner-title"></h1>
   </div>
 
+  <!-- MY LIST ROW -->
+  <div class="row" id="watchlist-row" style="display: none;">
+    <h2>My List</h2>
+    <div class="list" id="watchlist-list"></div>
+  </div>
+
   <div class="row">
     <h2>Trending Movies</h2>
     <div class="list" id="movies-list"></div>
@@ -50,6 +56,7 @@
         <div class="modal-text">
           <h2 id="modal-title"></h2>
           <div class="stars" id="modal-rating"></div>
+          <button id="watchlist-btn" class="watchlist-btn" onclick="toggleWatchlist()">Add to List</button>
           <p id="modal-description"></p>
         </div>
       </div>
