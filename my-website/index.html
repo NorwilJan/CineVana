@@ -50,38 +50,57 @@
 
   <!-- CONTINUE WATCHING ROW -->
   <div class="row" id="continue-row" style="display: none;">
-    <h2>Continue Watching</h2>
+    <div class="row-header">
+      <h2>Continue Watching</h2>
+    </div>
     <div class="list" id="continue-list"></div>
   </div>
 
   <!-- MY LIST ROW -->
   <div class="row" id="watchlist-row" style="display: none;">
-    <h2>My List</h2>
+    <div class="row-header">
+      <h2>My List</h2>
+    </div>
     <div class="list" id="watchlist-list"></div>
   </div>
 
   <div class="row" id="movies-row">
-    <h2>Trending Movies</h2>
+    <div class="row-header">
+      <h2>Trending Movies</h2>
+      <button class="see-all-btn" onclick="openGridModal('movies')">See All ></button>
+    </div>
     <div class="list" id="movies-list"></div>
   </div>
 
   <div class="row" id="tvshows-row">
-    <h2>Trending TV Shows</h2>
+    <div class="row-header">
+      <h2>Trending TV Shows</h2>
+      <button class="see-all-btn" onclick="openGridModal('tv')">See All ></button>
+    </div>
     <div class="list" id="tvshows-list"></div>
   </div>
 
   <div class="row" id="anime-row">
-    <h2>Trending Anime</h2>
+    <div class="row-header">
+      <h2>Trending Anime</h2>
+      <button class="see-all-btn" onclick="openGridModal('anime')">See All ></button>
+    </div>
     <div class="list" id="anime-list"></div>
   </div>
 
   <div class="row" id="tagalog-row">
-    <h2>Trending Tagalog Movies</h2>
+    <div class="row-header">
+      <h2>Trending Tagalog Movies</h2>
+      <button class="see-all-btn" onclick="openGridModal('tagalog')">See All ></button>
+    </div>
     <div class="list" id="tagalog-list"></div>
   </div>
 
   <div class="row" id="kdrama-row">
-    <h2>Trending K-Dramas</h2>
+    <div class="row-header">
+      <h2>Trending K-Dramas</h2>
+      <button class="see-all-btn" onclick="openGridModal('kdrama')">See All ></button>
+    </div>
     <div class="list" id="kdrama-list"></div>
   </div>
 
@@ -109,6 +128,15 @@
         <iframe id="modal-video" allowfullscreen></iframe>
       </div>
     </div>
+  </div>
+
+  <!-- SEE ALL GRID MODAL -->
+  <div class="grid-modal" id="grid-modal">
+    <div class="grid-modal-header">
+      <h2 id="grid-modal-title">Category</h2>
+      <span class="close" onclick="closeGridModal()" style="position: relative; top: 0; right: 0; background: none; font-size: 32px;">&times;</span>
+    </div>
+    <div class="grid-container" id="grid-modal-results"></div>
   </div>
 
   <div class="search-modal" id="search-modal">
