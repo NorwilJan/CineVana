@@ -120,6 +120,41 @@ function renderWatchlistRow() {
   }
 }
 
+// Category Tab Filtering
+function filterContent(category, eventElement) {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  eventElement.classList.add('active');
+
+  const watchlistRow = document.getElementById('watchlist-row');
+  const moviesRow = document.getElementById('movies-row');
+  const tvRow = document.getElementById('tvshows-row');
+  const animeRow = document.getElementById('anime-row');
+
+  const hasWatchlist = getWatchlist().length > 0;
+
+  if (category === 'all') {
+    if (hasWatchlist) watchlistRow.style.display = 'block';
+    moviesRow.style.display = 'block';
+    tvRow.style.display = 'block';
+    animeRow.style.display = 'block';
+  } else if (category === 'movie') {
+    watchlistRow.style.display = 'none';
+    moviesRow.style.display = 'block';
+    tvRow.style.display = 'none';
+    animeRow.style.display = 'none';
+  } else if (category === 'tv') {
+    watchlistRow.style.display = 'none';
+    moviesRow.style.display = 'none';
+    tvRow.style.display = 'block';
+    animeRow.style.display = 'none';
+  } else if (category === 'anime') {
+    watchlistRow.style.display = 'none';
+    moviesRow.style.display = 'none';
+    tvRow.style.display = 'none';
+    animeRow.style.display = 'block';
+  }
+}
+
 function openSearchModal() {
   document.getElementById('search-modal').style.display = 'flex';
   document.getElementById('search-input').focus();
