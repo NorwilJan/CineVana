@@ -2,6 +2,7 @@ const API_KEY = 'c5f2e226dd2ee0c8ed2c272a0ebaf049';
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_URL = 'https://image.tmdb.org/t/p/original';
 let currentItem;
+let searchTimeout;
 
 async function fetchTrending(type) {
   const res = await fetch(`${BASE_URL}/trending/${type}/week?api_key=${API_KEY}`);
@@ -72,6 +73,14 @@ function openSearchModal() {
 function closeSearchModal() {
   document.getElementById('search-modal').style.display = 'none';
   document.getElementById('search-results').innerHTML = '';
+  document.getElementById('search-input').value = '';
+}
+
+function handleSearchInput() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    searchTMDB();
+  }, 400);
 }
 
 async function searchTMDB() {
@@ -99,7 +108,20 @@ async function searchTMDB() {
   });
 }
 
+window.onclick = function(event) {
+  const modal = document.getElementById('modal');
+  const searchModal = document.getElementById('search-modal');
+  if (event.target === modal) {
+    closeModal();
+  }
+  if (event.target === searchModal) {
+    closeSearchModal();
+  }
+};
+
 async function init() {
+  document.getElementById('copyright-year').textContent = new Date().getFullYear();
+
   const movies = await fetchTrending('movie');
   const tvShows = await fetchTrending('tv');
   const anime = await fetchTrendingAnime();
