@@ -118,6 +118,60 @@ body.modal-open { overflow: hidden; }
   border: 1px solid #777;
 }
 
+/* SEASON & EPISODE STYLES */
+.series-options {
+  margin: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.season-select {
+  background: #222;
+  color: #fff;
+  border: 1px solid #444;
+  padding: 6px 10px;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.episodes-container {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  width: 100%;
+  padding-bottom: 5px;
+  scrollbar-width: none;
+}
+.episodes-container::-webkit-scrollbar { display: none; }
+
+.episode-btn {
+  background: #222;
+  color: #aaa;
+  border: 1px solid #444;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.episode-btn:hover {
+  background: #333;
+  color: #fff;
+}
+
+.episode-btn.active {
+  background: #e50914;
+  color: #fff;
+  border-color: #e50914;
+}
+
 /* FULL-SCREEN MOBILE MODAL FIX */
 .modal {
   position: fixed;
@@ -157,6 +211,7 @@ body.modal-open { overflow: hidden; }
 
 .modal-text {
   text-align: center;
+  width: 100%;
 }
 
 .stars { color: gold; margin: 5px 0; }
