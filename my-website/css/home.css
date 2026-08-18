@@ -107,12 +107,6 @@
       font-size: 24px;
     }
 
-    .server-selector {
-      margin: 15px 0;
-      text-align: left;
-    }
-
-
     .search-modal {
       position: fixed;
       top: 0; left: 0;
