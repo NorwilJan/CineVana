@@ -20,16 +20,40 @@ body.modal-open { overflow: hidden; }
   background-size: cover;
   background-position: center;
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  justify-content: flex-end;
   padding: 20px;
   background-image: linear-gradient(to top, #111, transparent);
 }
 
+.banner-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
 .banner h1 {
   background: rgba(0,0,0,0.6);
-  padding: 10px 15px;
+  padding: 8px 12px;
   border-radius: 4px;
-  font-size: 24px;
+  font-size: 22px;
+}
+
+.banner-btn {
+  background: #e50914;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.banner-btn:hover {
+  background: #b20710;
 }
 
 /* CATEGORY FILTER TABS */
