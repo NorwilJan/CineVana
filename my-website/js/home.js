@@ -24,11 +24,27 @@ async function fetchTrendingAnime() {
   return allResults;
 }
 
-async function fetchByGenre(genreId) {
+async function fetchByGenre(genreId, btnElement) {
+  document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
+  if (btnElement) btnElement.classList.add('active');
+
   const res = await fetch(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=${genreId}`);
   const data = await res.json();
+  
   displayList(data.results, 'movies-list');
-  document.getElementById('movies-title').textContent = "Filtered Results";
+  document.getElementById('movies-title').textContent = `${btnElement.textContent} Movies`;
+  document.getElementById('tvshows-row').style.display = 'none';
+  document.getElementById('anime-row').style.display = 'none';
+}
+
+function resetHomeView(btnElement) {
+  document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
+  if (btnElement) btnElement.classList.add('active');
+  
+  document.getElementById('tvshows-row').style.display = 'block';
+  document.getElementById('anime-row').style.display = 'block';
+  document.getElementById('movies-title').textContent = "Trending Movies";
+  initContent();
 }
 
 function displayBanner(item) {
@@ -46,6 +62,7 @@ function displayList(items, containerId) {
     const img = document.createElement('img');
     img.src = `${IMG_URL}${item.poster_path}`;
     img.alt = item.title || item.name;
+    img.loading = 'lazy';
     img.onclick = () => showDetails(item);
     container.appendChild(img);
   });
@@ -191,6 +208,7 @@ async function searchTMDB() {
     const img = document.createElement('img');
     img.src = `${IMG_URL}${item.poster_path}`;
     img.alt = item.title || item.name;
+    img.loading = 'lazy';
     img.onclick = () => {
       closeSearchModal();
       showDetails(item);
@@ -220,6 +238,17 @@ function installPWA() {
   }
 }
 
+async function initContent() {
+  const movies = await fetchTrending('movie');
+  const tvShows = await fetchTrending('tv');
+  const anime = await fetchTrendingAnime();
+
+  displayBanner(movies[Math.floor(Math.random() * movies.length)]);
+  displayList(movies, 'movies-list');
+  displayList(tvShows, 'tvshows-list');
+  displayList(anime, 'anime-list');
+}
+
 async function init() {
   document.getElementById('copyright-year').textContent = new Date().getFullYear();
   
@@ -230,15 +259,7 @@ async function init() {
   }
 
   loadWatchHistoryUI();
-
-  const movies = await fetchTrending('movie');
-  const tvShows = await fetchTrending('tv');
-  const anime = await fetchTrendingAnime();
-
-  displayBanner(movies[Math.floor(Math.random() * movies.length)]);
-  displayList(movies, 'movies-list');
-  displayList(tvShows, 'tvshows-list');
-  displayList(anime, 'anime-list');
+  await initContent();
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js');
