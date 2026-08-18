@@ -5,7 +5,7 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; overflow-x
   display: flex; 
   justify-content: space-between; 
   align-items: center;
-  height: 60px; /* Fixed navbar height */
+  height: 70px; 
   padding: 0 15px; 
   background: #222; 
   position: sticky; 
@@ -21,8 +21,8 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; overflow-x
 }
 
 .navbar img { 
-  height: 100%; /* Fills the entire height of the navbar */
-  max-height: 50px; /* Leaves a tiny padding edge if needed, or adjust to 60px for full fit */
+  height: 100%;
+  max-height: 60px;
   width: auto; 
   object-fit: contain;
 }
