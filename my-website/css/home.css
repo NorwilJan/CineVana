@@ -1,261 +1,81 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: Arial, sans-serif; background: #111; color: #fff; overflow-x: hidden; }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Website</title>
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="preload" href="css/home.css" as="style">
+  <link rel="preload" href="js/home.js" as="script">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script defer src="js/home.js"></script>
+</head>
 
-.navbar {
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center;
-  height: 70px; 
-  padding: 0 15px; 
-  background: #222; 
-  position: sticky; 
-  top: 0; 
-  z-index: 5;
-}
+<body>
+  <div class="navbar">
+    <a href="index.html">
+      <img src="logo.png" alt="Website Logo" />
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <input type="text" class="search-bar" placeholder="Search..." onfocus="openSearchModal()" />
+    </div>
+  </div>
 
-.navbar a {
-  display: flex;
-  align-items: center;
-  height: 100%;
-  text-decoration: none;
-}
+  <div class="banner" id="banner">
+    <h1 id="banner-title"></h1>
+  </div>
 
-.navbar img { 
-  height: 100%;
-  max-height: 60px;
-  width: auto; 
-  object-fit: contain;
-}
+  <div class="row">
+    <h2>Trending Movies</h2>
+    <div class="list" id="movies-list"></div>
+  </div>
 
-.nav-links { display: flex; align-items: center; gap: 10px; }
+  <div class="row">
+    <h2>Trending TV Shows</h2>
+    <div class="list" id="tvshows-list"></div>
+  </div>
 
-.search-bar {
-  padding: 8px 12px; border-radius: 4px; border: none; background: #333; color: #fff; outline: none; font-size: 14px;
-}
+  <div class="row">
+    <h2>Trending Anime</h2>
+    <div class="list" id="anime-list"></div>
+  </div>
 
-.banner {
-  height: 50vh;
-  background-size: cover;
-  background-position: center;
-  display: flex;
-  align-items: flex-end;
-  padding: 20px;
-  background-image: linear-gradient(to top, #111, transparent);
-}
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()" style="color: red;">&times;</span>
+      <div class="modal-body">
+        <img id="modal-image" src="" alt="" />
+        <div class="modal-text">
+          <h2 id="modal-title"></h2>
+          <div class="stars" id="modal-rating"></div>
+          <p id="modal-description"></p>
+        </div>
+      </div>
+      
+      <div class="video-container">
+        <iframe id="modal-video" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
 
-.banner h1 {
-  background: rgba(0,0,0,0.6);
-  padding: 10px 15px;
-  border-radius: 4px;
-  font-size: 24px;
-}
+  <div class="search-modal" id="search-modal">
+    <span class="close" onclick="closeSearchModal()" style="color: red;">&times;</span>
+    <input type="text" id="search-input" placeholder="Search for a movie or show..." oninput="searchTMDB()" />
+    <div class="results" id="search-results"></div>
+  </div>
 
-.row {
-  margin: 20px 15px;
-}
+  <footer class="footer">
+    <div class="footer-content">
+      <p>&copy; 2025 My Website. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="#">Disclaimer</a>
+        <a href="#">About Us</a>
+        <a href="#">Contact Us</a>
+      </div>
+    </div>
+  </footer>
 
-.row h2 {
-  margin-bottom: 10px;
-  font-size: 18px;
-}
-
-.list {
-  display: flex;
-  overflow-x: auto;
-  gap: 10px;
-  scrollbar-width: none;
-}
-.list::-webkit-scrollbar { display: none; }
-
-.list img {
-  width: 130px;
-  height: 195px;
-  object-fit: cover;
-  flex-shrink: 0;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: transform 0.3s ease;
-}
-
-.list img:hover {
-  transform: scale(1.05);
-}
-
-/* FULL-SCREEN MOBILE MODAL FIX */
-.modal {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100dvh;
-  background: #111;
-  display: none;
-  flex-direction: column;
-  z-index: 100;
-  overflow-y: auto;
-}
-
-.modal-content {
-  background: #111;
-  padding: 15px;
-  width: 100%;
-  max-width: 100%;
-  min-height: 100dvh;
-  border-radius: 0;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-body {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.modal-body img {
-  width: 120px;
-  border-radius: 4px;
-  align-self: center;
-}
-
-.modal-text {
-  text-align: center;
-}
-
-.stars { color: gold; margin: 5px 0; }
-
-.close {
-  position: fixed;
-  top: 15px; right: 20px;
-  cursor: pointer;
-  font-size: 28px;
-  z-index: 110;
-  background: rgba(0,0,0,0.5);
-  border-radius: 50%;
-  width: 40px; height: 40px;
-  display: flex; align-items: center; justify-content: center;
-}
-
-.video-container {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  background: #000;
-  margin-top: auto;
-}
-
-.video-container iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
-/* SEARCH MODAL FULL SCREEN */
-.search-modal {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100dvh;
-  background: #111;
-  display: none;
-  flex-direction: column;
-  z-index: 115;
-  padding: 20px;
-  overflow-y: auto;
-}
-
-.search-modal input {
-  width: 100%;
-  padding: 12px;
-  border-radius: 5px;
-  border: none;
-  background: #222;
-  color: #fff;
-  margin-bottom: 20px;
-  margin-top: 30px;
-  font-size: 16px;
-}
-
-.search-modal .results {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-
-.search-modal img {
-  width: 100%;
-  aspect-ratio: 2/3;
-  object-fit: cover;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-/* Desktop Overrides */
-@media (min-width: 768px) {
-  .modal {
-    justify-content: center;
-    align-items: center;
-    background: rgba(0,0,0,0.8);
-  }
-  .modal-content {
-    max-width: 850px;
-    max-height: 90vh;
-    min-height: auto;
-    border-radius: 10px;
-    background: #222;
-  }
-  .modal-body {
-    flex-direction: row;
-    text-align: left;
-  }
-  .modal-body img {
-    width: 25%;
-    align-self: flex-start;
-  }
-  .modal-text {
-    text-align: left;
-  }
-  .close {
-    position: absolute;
-  }
-  .search-modal {
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.9);
-    align-items: center;
-  }
-  .search-modal input {
-    width: 400px;
-  }
-  .search-modal .results {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  .search-modal img {
-    width: 130px;
-  }
-}
-
-.footer {
-  background: #222;
-  color: #ccc;
-  padding: 30px 20px;
-  text-align: center;
-  margin-top: 40px;
-}
-
-.footer-content {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.footer-links {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-}
-
-.footer-links a {
-  color: #e50914;
-  text-decoration: none;
-}
+</body>
+</html>
