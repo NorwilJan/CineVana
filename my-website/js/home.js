@@ -1,8 +1,12 @@
 const API_KEY = 'c5f2e226dd2ee0c8ed2c272a0ebaf049';
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_URL = 'https://image.tmdb.org/t/p/original';
+
 let currentItem;
+let currentSeason = 1;
+let currentEpisode = 1;
 let searchTimeout;
+let showDetailsCache = {};
 
 async function fetchTrending(type) {
   const res = await fetch(`${BASE_URL}/trending/${type}/week?api_key=${API_KEY}`);
@@ -12,7 +16,6 @@ async function fetchTrending(type) {
 
 async function fetchTrendingAnime() {
   let allResults = [];
-
   for (let page = 1; page <= 3; page++) {
     const res = await fetch(`${BASE_URL}/trending/tv/week?api_key=${API_KEY}&page=${page}`);
     const data = await res.json();
@@ -21,8 +24,19 @@ async function fetchTrendingAnime() {
     );
     allResults = allResults.concat(filtered);
   }
-
   return allResults;
+}
+
+async function fetchTagalogContent() {
+  const res = await fetch(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_original_language=tl&sort_by=popularity.desc`);
+  const data = await res.json();
+  return data.results;
+}
+
+async function fetchKDramas() {
+  const res = await fetch(`${BASE_URL}/discover/tv?api_key=${API_KEY}&with_original_language=ko&sort_by=popularity.desc`);
+  const data = await res.json();
+  return data.results;
 }
 
 function displayBanner(item) {
@@ -45,23 +59,108 @@ function displayList(items, containerId, mediaType) {
   });
 }
 
-function showDetails(item) {
+async function showDetails(item) {
   currentItem = item;
+  currentSeason = 1;
+  currentEpisode = 1;
+  
   document.getElementById('modal-title').textContent = item.title || item.name;
   document.getElementById('modal-description').textContent = item.overview;
   document.getElementById('modal-image').src = `${IMG_URL}${item.poster_path}`;
   document.getElementById('modal-rating').innerHTML = '★'.repeat(Math.round(item.vote_average / 2));
   
   updateWatchlistButton();
-  loadVideo();
+
+  const isTv = currentItem.media_type === "tv" || !currentItem.title;
+  const seriesOptions = document.getElementById('series-options');
+
+  if (isTv) {
+    seriesOptions.style.display = 'flex';
+    await loadTVSeasons(currentItem.id);
+  } else {
+    seriesOptions.style.display = 'none';
+    loadVideo();
+  }
   
   document.getElementById('modal').style.display = 'flex';
   document.body.classList.add('modal-open');
 }
 
+async function loadTVSeasons(tvId) {
+  const seasonSelect = document.getElementById('season-select');
+  seasonSelect.innerHTML = '';
+
+  try {
+    let data = showDetailsCache[tvId];
+    if (!data) {
+      const res = await fetch(`${BASE_URL}/tv/${tvId}?api_key=${API_KEY}`);
+      data = await res.json();
+      showDetailsCache[tvId] = data;
+    }
+
+    if (data.seasons) {
+      data.seasons.forEach(season => {
+        if (season.season_number > 0) {
+          const option = document.createElement('option');
+          option.value = season.season_number;
+          option.textContent = season.name || `Season ${season.season_number}`;
+          seasonSelect.appendChild(option);
+        }
+      });
+    }
+
+    await loadEpisodes(tvId, 1);
+  } catch (error) {
+    console.error("Error loading TV seasons:", error);
+  }
+}
+
+async function loadEpisodes(tvId, seasonNumber) {
+  currentSeason = seasonNumber;
+  const episodesContainer = document.getElementById('episodes-container');
+  episodesContainer.innerHTML = '';
+
+  try {
+    const res = await fetch(`${BASE_URL}/tv/${tvId}/season/${seasonNumber}?api_key=${API_KEY}`);
+    const data = await res.json();
+
+    if (data.episodes && data.episodes.length > 0) {
+      currentEpisode = data.episodes[0].episode_number;
+
+      data.episodes.forEach(ep => {
+        const btn = document.createElement('button');
+        btn.className = `episode-btn ${ep.episode_number === currentEpisode ? 'active' : ''}`;
+        btn.textContent = `Ep ${ep.episode_number}`;
+        btn.onclick = () => {
+          document.querySelectorAll('.episode-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentEpisode = ep.episode_number;
+          loadVideo();
+        };
+        episodesContainer.appendChild(btn);
+      });
+    }
+    loadVideo();
+  } catch (error) {
+    console.error("Error loading episodes:", error);
+  }
+}
+
+function onSeasonChange() {
+  const selectedSeason = document.getElementById('season-select').value;
+  loadEpisodes(currentItem.id, parseInt(selectedSeason));
+}
+
 function loadVideo() {
-  const type = currentItem.media_type === "movie" ? "movie" : "tv";
-  const embedURL = `https://player.videasy.net/${type}/${currentItem.id}`;
+  const isTv = currentItem.media_type === "tv" || !currentItem.title;
+  let embedURL = '';
+
+  if (isTv) {
+    embedURL = `https://player.videasy.net/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
+  } else {
+    embedURL = `https://player.videasy.net/movie/${currentItem.id}`;
+  }
+
   document.getElementById('modal-video').src = embedURL;
 }
 
@@ -129,6 +228,8 @@ function filterContent(category, eventElement) {
   const moviesRow = document.getElementById('movies-row');
   const tvRow = document.getElementById('tvshows-row');
   const animeRow = document.getElementById('anime-row');
+  const tagalogRow = document.getElementById('tagalog-row');
+  const kdramaRow = document.getElementById('kdrama-row');
 
   const hasWatchlist = getWatchlist().length > 0;
 
@@ -137,21 +238,29 @@ function filterContent(category, eventElement) {
     moviesRow.style.display = 'block';
     tvRow.style.display = 'block';
     animeRow.style.display = 'block';
+    tagalogRow.style.display = 'block';
+    kdramaRow.style.display = 'block';
   } else if (category === 'movie') {
     watchlistRow.style.display = 'none';
     moviesRow.style.display = 'block';
     tvRow.style.display = 'none';
     animeRow.style.display = 'none';
+    tagalogRow.style.display = 'block';
+    kdramaRow.style.display = 'none';
   } else if (category === 'tv') {
     watchlistRow.style.display = 'none';
     moviesRow.style.display = 'none';
     tvRow.style.display = 'block';
     animeRow.style.display = 'none';
+    tagalogRow.style.display = 'none';
+    kdramaRow.style.display = 'block';
   } else if (category === 'anime') {
     watchlistRow.style.display = 'none';
     moviesRow.style.display = 'none';
     tvRow.style.display = 'none';
     animeRow.style.display = 'block';
+    tagalogRow.style.display = 'none';
+    kdramaRow.style.display = 'none';
   }
 }
 
@@ -205,13 +314,18 @@ async function init() {
   const movies = await fetchTrending('movie');
   const tvShows = await fetchTrending('tv');
   const anime = await fetchTrendingAnime();
+  const tagalogMovies = await fetchTagalogContent();
+  const kDramas = await fetchKDramas();
 
   if (movies.length > 0) {
     displayBanner(movies[Math.floor(Math.random() * movies.length)]);
   }
+  
   displayList(movies, 'movies-list', 'movie');
   displayList(tvShows, 'tvshows-list', 'tv');
   displayList(anime, 'anime-list', 'tv');
+  displayList(tagalogMovies, 'tagalog-list', 'movie');
+  displayList(kDramas, 'kdrama-list', 'tv');
   
   renderWatchlistRow();
 }
