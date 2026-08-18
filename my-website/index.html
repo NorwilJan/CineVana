@@ -38,6 +38,16 @@
     <button class="tab-btn" onclick="filterContent('anime', this)">Anime</button>
   </div>
 
+  <!-- GENRE FILTER CHIPS -->
+  <div class="genre-tabs" id="genre-container">
+    <button class="genre-btn active" onclick="filterByGenre('all', this)">All Genres</button>
+    <button class="genre-btn" onclick="filterByGenre(28, this)">Action</button>
+    <button class="genre-btn" onclick="filterByGenre(35, this)">Comedy</button>
+    <button class="genre-btn" onclick="filterByGenre(27, this)">Horror</button>
+    <button class="genre-btn" onclick="filterByGenre(10749, this)">Romance</button>
+    <button class="genre-btn" onclick="filterByGenre(878, this)">Sci-Fi</button>
+  </div>
+
   <!-- CONTINUE WATCHING ROW -->
   <div class="row" id="continue-row" style="display: none;">
     <h2>Continue Watching</h2>
