@@ -40,6 +40,12 @@ async function fetchKDramas() {
   return data.results;
 }
 
+async function fetchByGenreId(genreId) {
+  const res = await fetch(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=${genreId}&sort_by=popularity.desc`);
+  const data = await res.json();
+  return data.results;
+}
+
 function displayBanner(item) {
   bannerItem = item;
   document.getElementById('banner').style.backgroundImage = `url(${IMG_URL}${item.backdrop_path})`;
@@ -235,7 +241,7 @@ function addToContinueWatching(item) {
   let list = getContinueWatching();
   list = list.filter(i => i.id !== item.id);
   list.unshift(item);
-  if (list.length > 10) list.pop(); // Keep last 10
+  if (list.length > 10) list.pop();
   localStorage.setItem('continueWatching', JSON.stringify(list));
   renderContinueWatchingRow();
 }
@@ -302,6 +308,30 @@ function filterContent(category, eventElement) {
   }
 }
 
+async function filterByGenre(genreId, eventElement) {
+  document.querySelectorAll('.genre-btn').forEach(btn => btn.classList.remove('active'));
+  eventElement.classList.add('active');
+
+  if (genreId === 'all') {
+    init();
+    return;
+  }
+
+  const genreResults = await fetchByGenreId(genreId);
+  
+  document.getElementById('continue-row').style.display = 'none';
+  document.getElementById('watchlist-row').style.display = 'none';
+  document.getElementById('tvshows-row').style.display = 'none';
+  document.getElementById('anime-row').style.display = 'none';
+  document.getElementById('tagalog-row').style.display = 'none';
+  document.getElementById('kdrama-row').style.display = 'none';
+
+  const moviesRow = document.getElementById('movies-row');
+  moviesRow.style.display = 'block';
+  moviesRow.querySelector('h2').textContent = `${eventElement.textContent} Movies`;
+  displayList(genreResults, 'movies-list', 'movie');
+}
+
 function openSearchModal() {
   document.getElementById('search-modal').style.display = 'flex';
   document.getElementById('search-input').focus();
@@ -359,6 +389,7 @@ async function init() {
     displayBanner(movies[Math.floor(Math.random() * movies.length)]);
   }
   
+  document.querySelector('#movies-row h2').textContent = 'Trending Movies';
   displayList(movies, 'movies-list', 'movie');
   displayList(tvShows, 'tvshows-list', 'tv');
   displayList(anime, 'anime-list', 'tv');
