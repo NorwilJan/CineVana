@@ -16,41 +16,55 @@ let fullDataCache = {
   kdrama: []
 };
 
+async function fetchMultiplePages(endpoint, maxPages = 3) {
+  let allResults = [];
+  try {
+    for (let page = 1; page <= maxPages; page++) {
+      const res = await fetch(`${BASE_URL}${endpoint}&page=${page}&api_key=${API_KEY}`);
+      const data = await res.json();
+      if (data.results) {
+        allResults = allResults.concat(data.results);
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching multiple pages:", error);
+  }
+  return allResults;
+}
+
 async function fetchTrending(type) {
-  const res = await fetch(`${BASE_URL}/trending/${type}/week?api_key=${API_KEY}`);
-  const data = await res.json();
-  return data.results;
+  return await fetchMultiplePages(`/trending/${type}/week?`, 3);
 }
 
 async function fetchTrendingAnime() {
   let allResults = [];
-  for (let page = 1; page <= 3; page++) {
-    const res = await fetch(`${BASE_URL}/trending/tv/week?api_key=${API_KEY}&page=${page}`);
-    const data = await res.json();
-    const filtered = data.results.filter(item =>
-      item.original_language === 'ja' && item.genre_ids && item.genre_ids.includes(16)
-    );
-    allResults = allResults.concat(filtered);
+  try {
+    for (let page = 1; page <= 5; page++) {
+      const res = await fetch(`${BASE_URL}/trending/tv/week?api_key=${API_KEY}&page=${page}`);
+      const data = await res.json();
+      if (data.results) {
+        const filtered = data.results.filter(item =>
+          item.original_language === 'ja' && item.genre_ids && item.genre_ids.includes(16)
+        );
+        allResults = allResults.concat(filtered);
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching anime:", error);
   }
   return allResults;
 }
 
 async function fetchTagalogContent() {
-  const res = await fetch(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_original_language=tl&sort_by=popularity.desc`);
-  const data = await res.json();
-  return data.results;
+  return await fetchMultiplePages(`/discover/movie?with_original_language=tl&sort_by=popularity.desc`, 3);
 }
 
 async function fetchKDramas() {
-  const res = await fetch(`${BASE_URL}/discover/tv?api_key=${API_KEY}&with_original_language=ko&sort_by=popularity.desc`);
-  const data = await res.json();
-  return data.results;
+  return await fetchMultiplePages(`/discover/tv?with_original_language=ko&sort_by=popularity.desc`, 3);
 }
 
 async function fetchByGenreId(genreId) {
-  const res = await fetch(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=${genreId}&sort_by=popularity.desc`);
-  const data = await res.json();
-  return data.results;
+  return await fetchMultiplePages(`/discover/movie?with_genres=${genreId}&sort_by=popularity.desc`, 3);
 }
 
 function displayBanner(item) {
@@ -66,7 +80,9 @@ function playBanner() {
 function displayList(items, containerId, mediaType) {
   const container = document.getElementById(containerId);
   container.innerHTML = '';
-  items.forEach(item => {
+  const slicedItems = items.slice(0, 20);
+  
+  slicedItems.forEach(item => {
     if (!item.poster_path) return;
     if (!item.media_type) item.media_type = mediaType;
     
@@ -428,7 +444,6 @@ async function init() {
   const tagalogMovies = await fetchTagalogContent();
   const kDramas = await fetchKDramas();
 
-  // Cache for See All modals
   fullDataCache.movies = movies;
   fullDataCache.tv = tvShows;
   fullDataCache.anime = anime;
