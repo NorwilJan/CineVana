@@ -8,6 +8,13 @@ let currentSeason = 1;
 let currentEpisode = 1;
 let searchTimeout;
 let showDetailsCache = {};
+let fullDataCache = {
+  movies: [],
+  tv: [],
+  anime: [],
+  tagalog: [],
+  kdrama: []
+};
 
 async function fetchTrending(type) {
   const res = await fetch(`${BASE_URL}/trending/${type}/week?api_key=${API_KEY}`);
@@ -332,6 +339,42 @@ async function filterByGenre(genreId, eventElement) {
   displayList(genreResults, 'movies-list', 'movie');
 }
 
+// See All Grid Modal Logic
+function openGridModal(category) {
+  const modal = document.getElementById('grid-modal');
+  const titleEl = document.getElementById('grid-modal-title');
+  const container = document.getElementById('grid-modal-results');
+  container.innerHTML = '';
+
+  let items = fullDataCache[category] || [];
+  
+  if (category === 'movies') titleEl.textContent = 'Trending Movies';
+  if (category === 'tv') titleEl.textContent = 'Trending TV Shows';
+  if (category === 'anime') titleEl.textContent = 'Trending Anime';
+  if (category === 'tagalog') titleEl.textContent = 'Trending Tagalog Movies';
+  if (category === 'kdrama') titleEl.textContent = 'Trending K-Dramas';
+
+  items.forEach(item => {
+    if (!item.poster_path) return;
+    const img = document.createElement('img');
+    img.src = `${IMG_URL}${item.poster_path}`;
+    img.alt = item.title || item.name;
+    img.onclick = () => {
+      closeGridModal();
+      showDetails(item);
+    };
+    container.appendChild(img);
+  });
+
+  modal.style.display = 'flex';
+  document.body.classList.add('modal-open');
+}
+
+function closeGridModal() {
+  document.getElementById('grid-modal').style.display = 'none';
+  document.body.classList.remove('modal-open');
+}
+
 function openSearchModal() {
   document.getElementById('search-modal').style.display = 'flex';
   document.getElementById('search-input').focus();
@@ -384,6 +427,13 @@ async function init() {
   const anime = await fetchTrendingAnime();
   const tagalogMovies = await fetchTagalogContent();
   const kDramas = await fetchKDramas();
+
+  // Cache for See All modals
+  fullDataCache.movies = movies;
+  fullDataCache.tv = tvShows;
+  fullDataCache.anime = anime;
+  fullDataCache.tagalog = tagalogMovies;
+  fullDataCache.kdrama = kDramas;
 
   if (movies.length > 0) {
     displayBanner(movies[Math.floor(Math.random() * movies.length)]);
