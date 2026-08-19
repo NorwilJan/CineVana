@@ -6,7 +6,6 @@ let currentItem;
 let bannerItem;
 let currentSeason = 1;
 let currentEpisode = 1;
-let currentServer = 'videasy';
 let currentTrailerKey = null;
 let searchTimeout;
 let showDetailsCache = {};
@@ -252,29 +251,14 @@ function onSeasonChange() {
   loadEpisodes(currentItem.id, parseInt(selectedSeason));
 }
 
-function switchServer(serverName, btnElement) {
-  currentServer = serverName;
-  document.querySelectorAll('.server-btn').forEach(b => b.classList.remove('active'));
-  btnElement.classList.add('active');
-  loadVideo();
-}
-
 function loadVideo() {
   const isTv = currentItem.media_type === "tv" || !currentItem.title;
   let embedURL = '';
 
-  if (currentServer === 'videasy') {
-    if (isTv) {
-      embedURL = `https://player.videasy.net/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
-    } else {
-      embedURL = `https://player.videasy.net/movie/${currentItem.id}`;
-    }
-  } else if (currentServer === 'vidsrc') {
-    if (isTv) {
-      embedURL = `https://vidsrc.xyz/embed/tv?tmdb=${currentItem.id}&season=${currentSeason}&episode=${currentEpisode}`;
-    } else {
-      embedURL = `https://vidsrc.xyz/embed/movie?tmdb=${currentItem.id}`;
-    }
+  if (isTv) {
+    embedURL = `https://player.videasy.net/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
+  } else {
+    embedURL = `https://player.videasy.net/movie/${currentItem.id}`;
   }
 
   document.getElementById('modal-video').src = embedURL;
