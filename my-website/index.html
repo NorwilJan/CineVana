@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>My Website</title>
   <link rel="stylesheet" href="css/home.css">
+  <link rel="preload" href="css/home.css" as="style">
+  <link rel="preload" href="js/home.js" as="script">
+  <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script defer src="js/home.js"></script>
 </head>
@@ -27,6 +30,7 @@
     </div>
   </div>
 
+  <!-- CATEGORY FILTER TABS -->
   <div class="filter-tabs">
     <button class="tab-btn active" onclick="filterContent('all', this)">All</button>
     <button class="tab-btn" onclick="filterContent('movie', this)">Movies</button>
@@ -34,6 +38,7 @@
     <button class="tab-btn" onclick="filterContent('anime', this)">Anime</button>
   </div>
 
+  <!-- GENRE FILTER CHIPS -->
   <div class="genre-tabs" id="genre-container">
     <button class="genre-btn active" onclick="filterByGenre('all', this)">All Genres</button>
     <button class="genre-btn" onclick="filterByGenre(28, this)">Action</button>
@@ -43,6 +48,7 @@
     <button class="genre-btn" onclick="filterByGenre(878, this)">Sci-Fi</button>
   </div>
 
+  <!-- CONTINUE WATCHING ROW -->
   <div class="row" id="continue-row" style="display: none;">
     <div class="row-header">
       <h2>Continue Watching</h2>
@@ -50,6 +56,7 @@
     <div class="list" id="continue-list"></div>
   </div>
 
+  <!-- MY LIST ROW -->
   <div class="row" id="watchlist-row" style="display: none;">
     <div class="row-header">
       <h2>My List</h2>
@@ -63,22 +70,6 @@
       <button class="see-all-btn" onclick="openGridModal('movies')">See All ></button>
     </div>
     <div class="list" id="movies-list"></div>
-  </div>
-
-  <div class="row" id="toprated-row">
-    <div class="row-header">
-      <h2>Top Rated Films</h2>
-      <button class="see-all-btn" onclick="openGridModal('toprated')">See All ></button>
-    </div>
-    <div class="list" id="toprated-list"></div>
-  </div>
-
-  <div class="row" id="upcoming-row">
-    <div class="row-header">
-      <h2>Upcoming Releases</h2>
-      <button class="see-all-btn" onclick="openGridModal('upcoming')">See All ></button>
-    </div>
-    <div class="list" id="upcoming-list"></div>
   </div>
 
   <div class="row" id="tvshows-row">
@@ -113,25 +104,9 @@
     <div class="list" id="kdrama-list"></div>
   </div>
 
-  <div class="row" id="cdrama-row">
-    <div class="row-header">
-      <h2>Trending Chinese Dramas</h2>
-      <button class="see-all-btn" onclick="openGridModal('cdrama')">See All ></button>
-    </div>
-    <div class="list" id="cdrama-list"></div>
-  </div>
-
-  <div class="row" id="thai-row">
-    <div class="row-header">
-      <h2>Trending Thai Dramas</h2>
-      <button class="see-all-btn" onclick="openGridModal('thai')">See All ></button>
-    </div>
-    <div class="list" id="thai-list"></div>
-  </div>
-
   <div class="modal" id="modal">
     <div class="modal-content">
-      <span class="close" onclick="closeModal()">&times;</span>
+      <span class="close" onclick="closeModal()" style="color: red;">&times;</span>
       <div class="modal-body">
         <img id="modal-image" src="" alt="" />
         <div class="modal-text">
@@ -140,10 +115,12 @@
           <button id="watchlist-btn" class="watchlist-btn" onclick="toggleWatchlist()">Add to List</button>
           <p id="modal-description"></p>
           
+          <!-- Series Season & Episode Selector -->
           <div id="series-options" class="series-options" style="display: none;">
             <select id="season-select" class="season-select" onchange="onSeasonChange()"></select>
             <div id="episodes-container" class="episodes-container"></div>
           </div>
+
         </div>
       </div>
       
@@ -153,23 +130,24 @@
     </div>
   </div>
 
+  <!-- SEE ALL GRID MODAL -->
   <div class="grid-modal" id="grid-modal">
     <div class="grid-modal-header">
       <h2 id="grid-modal-title">Category</h2>
-      <span class="close" onclick="closeGridModal()">&times;</span>
+      <span class="close" onclick="closeGridModal()" style="position: relative; top: 0; right: 0; background: none; font-size: 32px;">&times;</span>
     </div>
     <div class="grid-container" id="grid-modal-results"></div>
   </div>
 
   <div class="search-modal" id="search-modal">
-    <span class="close" onclick="closeSearchModal()">&times;</span>
+    <span class="close" onclick="closeSearchModal()" style="color: red;">&times;</span>
     <input type="text" id="search-input" placeholder="Search for a movie or show..." oninput="debounceSearch()" />
     <div class="results" id="search-results"></div>
   </div>
 
   <footer class="footer">
     <div class="footer-content">
-      <p>&copy; 2026 My Website. All rights reserved.</p>
+      <p>&copy; 2025 My Website. All rights reserved.</p>
       <div class="footer-links">
         <a href="#">Disclaimer</a>
         <a href="#">About Us</a>
