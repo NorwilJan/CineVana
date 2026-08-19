@@ -94,10 +94,16 @@ function displayList(items, containerId, mediaType) {
   });
 }
 
+// Upgraded Show Details with Progress Restoration
 async function showDetails(item) {
   currentItem = item;
-  currentSeason = 1;
-  currentEpisode = 1;
+  
+  // Check if item has saved progress in Continue Watching
+  let continueList = getContinueWatching();
+  let savedProgress = continueList.find(i => i.id === item.id);
+  
+  currentSeason = savedProgress ? (savedProgress.savedSeason || 1) : 1;
+  currentEpisode = savedProgress ? (savedProgress.savedEpisode || 1) : 1;
   
   document.getElementById('modal-title').textContent = item.title || item.name;
   document.getElementById('modal-description').textContent = item.overview;
@@ -105,14 +111,14 @@ async function showDetails(item) {
   document.getElementById('modal-rating').innerHTML = '★'.repeat(Math.round(item.vote_average / 2));
   
   updateWatchlistButton();
-  addToContinueWatching(item);
+  saveCurrentProgress(); // Log/update progress initially
 
   const isTv = currentItem.media_type === "tv" || !currentItem.title;
   const seriesOptions = document.getElementById('series-options');
 
   if (isTv) {
     seriesOptions.style.display = 'flex';
-    await loadTVSeasons(currentItem.id);
+    await loadTVSeasons(currentItem.id, currentSeason, currentEpisode);
   } else {
     seriesOptions.style.display = 'none';
     loadVideo();
@@ -122,7 +128,7 @@ async function showDetails(item) {
   document.body.classList.add('modal-open');
 }
 
-async function loadTVSeasons(tvId) {
+async function loadTVSeasons(tvId, targetSeason = 1, targetEpisode = 1) {
   const seasonSelect = document.getElementById('season-select');
   seasonSelect.innerHTML = '';
 
@@ -140,12 +146,17 @@ async function loadTVSeasons(tvId) {
           const option = document.createElement('option');
           option.value = season.season_number;
           option.textContent = season.name || `Season ${season.season_number}`;
+          if (season.season_number === targetSeason) {
+            option.selected = true;
+          }
           seasonSelect.appendChild(option);
         }
       });
     }
 
-    await loadEpisodes(tvId, 1);
+    currentSeason = targetSeason;
+    currentEpisode = targetEpisode;
+    await loadEpisodes(tvId, targetSeason);
   } catch (error) {
     console.error("Error loading TV seasons:", error);
   }
@@ -161,7 +172,10 @@ async function loadEpisodes(tvId, seasonNumber) {
     const data = await res.json();
 
     if (data.episodes && data.episodes.length > 0) {
-      currentEpisode = data.episodes[0].episode_number;
+      // If we switched seasons manually, default to ep 1 unless target is already set
+      if (!currentEpisode || currentSeason !== seasonNumber) {
+        currentEpisode = data.episodes[0].episode_number;
+      }
 
       data.episodes.forEach(ep => {
         const btn = document.createElement('button');
@@ -172,6 +186,7 @@ async function loadEpisodes(tvId, seasonNumber) {
           btn.classList.add('active');
           currentEpisode = ep.episode_number;
           loadVideo();
+          saveCurrentProgress();
         };
         episodesContainer.appendChild(btn);
       });
@@ -255,16 +270,30 @@ function renderWatchlistRow() {
   }
 }
 
-// Continue Watching Logic
+// Continue Watching State Management Logic
 function getContinueWatching() {
   return JSON.parse(localStorage.getItem('continueWatching')) || [];
 }
 
-function addToContinueWatching(item) {
+function saveCurrentProgress() {
+  if (!currentItem) return;
   let list = getContinueWatching();
-  list = list.filter(i => i.id !== item.id);
-  list.unshift(item);
-  if (list.length > 10) list.pop();
+  let existingIndex = list.findIndex(i => i.id === currentItem.id);
+  
+  const itemData = {
+    ...currentItem,
+    savedSeason: currentSeason,
+    savedEpisode: currentEpisode,
+    lastWatched: Date.now()
+  };
+
+  if (existingIndex > -1) {
+    list.splice(existingIndex, 1);
+  }
+  
+  list.unshift(itemData);
+  if (list.length > 15) list.pop();
+  
   localStorage.setItem('continueWatching', JSON.stringify(list));
   renderContinueWatchingRow();
 }
