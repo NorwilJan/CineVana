@@ -330,30 +330,6 @@ body.modal-open {
   background: #e50914;
 }
 
-.server-selector {
-  display: flex;
-  gap: 6px;
-  background: #111;
-  padding: 6px 10px;
-  align-items: center;
-}
-
-.server-btn {
-  background: #222;
-  color: #aaa;
-  border: none;
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.server-btn.active {
-  background: #e50914;
-  color: #fff;
-}
-
 .video-container {
   width: 100%;
   aspect-ratio: 16/9;
