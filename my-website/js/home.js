@@ -237,11 +237,11 @@ function loadVideo() {
       embedURL = `https://player.videasy.net/movie/${currentItem.id}`;
     }
   } else if (currentServer === 'vidsrc') {
-    // Fixed working backup provider format (vidsrc.cc)
+    // Switched to vidsrc.to for a separate backup player provider
     if (isTv) {
-      embedURL = `https://vidsrc.cc/v2/embed/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
+      embedURL = `https://vidsrc.to/embed/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
     } else {
-      embedURL = `https://vidsrc.cc/v2/embed/movie/${currentItem.id}`;
+      embedURL = `https://vidsrc.to/embed/movie/${currentItem.id}`;
     }
   }
 
