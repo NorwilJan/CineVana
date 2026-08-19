@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>My Website</title>
   <link rel="stylesheet" href="css/home.css">
-  <link rel="preload" href="css/home.css" as="style">
-  <link rel="preload" href="js/home.js" as="script">
-  <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script defer src="js/home.js"></script>
 </head>
@@ -134,7 +131,7 @@
 
   <div class="modal" id="modal">
     <div class="modal-content">
-      <span class="close" onclick="closeModal()" style="color: red;">&times;</span>
+      <span class="close" onclick="closeModal()">&times;</span>
       <div class="modal-body">
         <img id="modal-image" src="" alt="" />
         <div class="modal-text">
@@ -159,13 +156,13 @@
   <div class="grid-modal" id="grid-modal">
     <div class="grid-modal-header">
       <h2 id="grid-modal-title">Category</h2>
-      <span class="close" onclick="closeGridModal()" style="position: relative; top: 0; right: 0; background: none; font-size: 32px;">&times;</span>
+      <span class="close" onclick="closeGridModal()">&times;</span>
     </div>
     <div class="grid-container" id="grid-modal-results"></div>
   </div>
 
   <div class="search-modal" id="search-modal">
-    <span class="close" onclick="closeSearchModal()" style="color: red;">&times;</span>
+    <span class="close" onclick="closeSearchModal()">&times;</span>
     <input type="text" id="search-input" placeholder="Search for a movie or show..." oninput="debounceSearch()" />
     <div class="results" id="search-results"></div>
   </div>
