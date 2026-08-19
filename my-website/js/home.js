@@ -6,6 +6,7 @@ let currentItem;
 let bannerItem;
 let currentSeason = 1;
 let currentEpisode = 1;
+let currentServer = 'videasy';
 let searchTimeout;
 let showDetailsCache = {};
 let fullDataCache = {
@@ -16,7 +17,18 @@ let fullDataCache = {
   kdrama: []
 };
 
-async function fetchMultiplePages(endpoint, maxPages = 3) {
+// Smart Cache Wrapper for API Requests (Expires in 1 hour)
+async function cachedFetch(endpoint, maxPages = 3) {
+  const cacheKey = `tmdb_cache_${endpoint}_pages_${maxPages}`;
+  const cachedData = localStorage.getItem(cacheKey);
+  const cachedTime = localStorage.getItem(`${cacheKey}_time`);
+  
+  const ONE_HOUR = 60 * 60 * 1000;
+  
+  if (cachedData && cachedTime && (Date.now() - parseInt(cachedTime) < ONE_HOUR)) {
+    return JSON.parse(cachedData);
+  }
+
   let allResults = [];
   try {
     for (let page = 1; page <= maxPages; page++) {
@@ -26,19 +38,31 @@ async function fetchMultiplePages(endpoint, maxPages = 3) {
         allResults = allResults.concat(data.results);
       }
     }
+    localStorage.setItem(cacheKey, JSON.stringify(allResults));
+    localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
   } catch (error) {
     console.error("Error fetching multiple pages:", error);
+    if (cachedData) return JSON.parse(cachedData);
   }
   return allResults;
 }
 
 async function fetchTrending(type) {
-  return await fetchMultiplePages(`/trending/${type}/week?`, 3);
+  return await cachedFetch(`/trending/${type}/week?`, 3);
 }
 
 async function fetchTrendingAnime() {
   let allResults = [];
   try {
+    const cacheKey = `tmdb_cache_trending_anime`;
+    const cachedData = localStorage.getItem(cacheKey);
+    const cachedTime = localStorage.getItem(`${cacheKey}_time`);
+    const ONE_HOUR = 60 * 60 * 1000;
+
+    if (cachedData && cachedTime && (Date.now() - parseInt(cachedTime) < ONE_HOUR)) {
+      return JSON.parse(cachedData);
+    }
+
     for (let page = 1; page <= 5; page++) {
       const res = await fetch(`${BASE_URL}/trending/tv/week?api_key=${API_KEY}&page=${page}`);
       const data = await res.json();
@@ -49,6 +73,8 @@ async function fetchTrendingAnime() {
         allResults = allResults.concat(filtered);
       }
     }
+    localStorage.setItem(cacheKey, JSON.stringify(allResults));
+    localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
   } catch (error) {
     console.error("Error fetching anime:", error);
   }
@@ -56,15 +82,15 @@ async function fetchTrendingAnime() {
 }
 
 async function fetchTagalogContent() {
-  return await fetchMultiplePages(`/discover/movie?with_original_language=tl&sort_by=popularity.desc`, 3);
+  return await cachedFetch(`/discover/movie?with_original_language=tl&sort_by=popularity.desc`, 3);
 }
 
 async function fetchKDramas() {
-  return await fetchMultiplePages(`/discover/tv?with_original_language=ko&sort_by=popularity.desc`, 3);
+  return await cachedFetch(`/discover/tv?with_original_language=ko&sort_by=popularity.desc`, 3);
 }
 
 async function fetchByGenreId(genreId) {
-  return await fetchMultiplePages(`/discover/movie?with_genres=${genreId}&sort_by=popularity.desc`, 3);
+  return await cachedFetch(`/discover/movie?with_genres=${genreId}&sort_by=popularity.desc`, 3);
 }
 
 function displayBanner(item) {
@@ -94,11 +120,10 @@ function displayList(items, containerId, mediaType) {
   });
 }
 
-// Upgraded Show Details with Progress Restoration
+// Show Details with Progress Restoration
 async function showDetails(item) {
   currentItem = item;
   
-  // Check if item has saved progress in Continue Watching
   let continueList = getContinueWatching();
   let savedProgress = continueList.find(i => i.id === item.id);
   
@@ -111,7 +136,7 @@ async function showDetails(item) {
   document.getElementById('modal-rating').innerHTML = '★'.repeat(Math.round(item.vote_average / 2));
   
   updateWatchlistButton();
-  saveCurrentProgress(); // Log/update progress initially
+  saveCurrentProgress();
 
   const isTv = currentItem.media_type === "tv" || !currentItem.title;
   const seriesOptions = document.getElementById('series-options');
@@ -172,7 +197,6 @@ async function loadEpisodes(tvId, seasonNumber) {
     const data = await res.json();
 
     if (data.episodes && data.episodes.length > 0) {
-      // If we switched seasons manually, default to ep 1 unless target is already set
       if (!currentEpisode || currentSeason !== seasonNumber) {
         currentEpisode = data.episodes[0].episode_number;
       }
@@ -206,13 +230,36 @@ function loadVideo() {
   const isTv = currentItem.media_type === "tv" || !currentItem.title;
   let embedURL = '';
 
-  if (isTv) {
-    embedURL = `https://player.videasy.net/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
-  } else {
-    embedURL = `https://player.videasy.net/movie/${currentItem.id}`;
+  if (currentServer === 'videasy') {
+    if (isTv) {
+      embedURL = `https://player.videasy.net/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
+    } else {
+      embedURL = `https://player.videasy.net/movie/${currentItem.id}`;
+    }
+  } else if (currentServer === 'vidsrc') {
+    if (isTv) {
+      embedURL = `https://vidsrc.xyz/embed/tv?tmdb=${currentItem.id}&season=${currentSeason}&episode=${currentEpisode}`;
+    } else {
+      embedURL = `https://vidsrc.xyz/embed/movie?tmdb=${currentItem.id}`;
+    }
   }
 
   document.getElementById('modal-video').src = embedURL;
+}
+
+function switchServer(serverName, eventElement) {
+  currentServer = serverName;
+  
+  document.querySelectorAll('.server-btn').forEach(btn => {
+    btn.style.background = '#222';
+    btn.style.color = '#aaa';
+    btn.style.borderColor = '#444';
+  });
+  eventElement.style.background = '#e50914';
+  eventElement.style.color = '#fff';
+  eventElement.style.borderColor = '#e50914';
+
+  loadVideo();
 }
 
 function closeModal() {
@@ -221,7 +268,7 @@ function closeModal() {
   document.body.classList.remove('modal-open');
 }
 
-// Watchlist Logic
+// Watchlist Logic & Toast Notifications
 function getWatchlist() {
   return JSON.parse(localStorage.getItem('myList')) || [];
 }
@@ -235,11 +282,14 @@ function toggleWatchlist() {
   if (!currentItem) return;
   let list = getWatchlist();
   const index = list.findIndex(item => item.id === currentItem.id);
+  const title = currentItem.title || currentItem.name;
   
   if (index > -1) {
     list.splice(index, 1);
+    showToast(`Removed "${title}" from your list`);
   } else {
     list.push(currentItem);
+    showToast(`Added "${title}" to your list`);
   }
   
   localStorage.setItem('myList', JSON.stringify(list));
@@ -270,7 +320,7 @@ function renderWatchlistRow() {
   }
 }
 
-// Continue Watching State Management Logic
+// Continue Watching Logic
 function getContinueWatching() {
   return JSON.parse(localStorage.getItem('continueWatching')) || [];
 }
@@ -307,6 +357,20 @@ function renderContinueWatchingRow() {
     row.style.display = 'block';
     displayList(list, 'continue-list', 'movie');
   }
+}
+
+// Toast Notification System
+function showToast(message) {
+  const toast = document.getElementById('toast-container');
+  if (!toast) return;
+  
+  toast.textContent = message;
+  toast.classList.add('show');
+  
+  clearTimeout(toast.timeoutId);
+  toast.timeoutId = setTimeout(() => {
+    toast.classList.remove('show');
+  }, 2500);
 }
 
 // Category Tab Filtering
