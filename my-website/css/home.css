@@ -480,3 +480,28 @@ body.modal-open { overflow: hidden; }
   color: #e50914;
   text-decoration: none;
 }
+
+/* TOAST NOTIFICATION STYLES */
+#toast-container {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: #222;
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 30px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  z-index: 999;
+  font-size: 14px;
+  font-weight: bold;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  pointer-events: none;
+  border: 1px solid #444;
+}
+
+#toast-container.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
