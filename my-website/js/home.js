@@ -6,27 +6,21 @@ let currentItem;
 let bannerItem;
 let currentSeason = 1;
 let currentEpisode = 1;
-let currentTrailerKey = null;
 let searchTimeout;
 let showDetailsCache = {};
 let fullDataCache = {
   movies: [],
-  toprated: [],
-  upcoming: [],
   tv: [],
   anime: [],
   tagalog: [],
-  kdrama: [],
-  cdrama: [],
-  thai: []
+  kdrama: []
 };
 
 async function fetchMultiplePages(endpoint, maxPages = 3) {
   let allResults = [];
   try {
     for (let page = 1; page <= maxPages; page++) {
-      const separator = endpoint.includes('?') ? '&' : '?';
-      const res = await fetch(`${BASE_URL}${endpoint}${separator}page=${page}&api_key=${API_KEY}`);
+      const res = await fetch(`${BASE_URL}${endpoint}&page=${page}&api_key=${API_KEY}`);
       const data = await res.json();
       if (data.results) {
         allResults = allResults.concat(data.results);
@@ -39,15 +33,7 @@ async function fetchMultiplePages(endpoint, maxPages = 3) {
 }
 
 async function fetchTrending(type) {
-  return await fetchMultiplePages(`/trending/${type}/week`, 3);
-}
-
-async function fetchTopRatedMovies() {
-  return await fetchMultiplePages(`/movie/top_rated`, 3);
-}
-
-async function fetchUpcomingMovies() {
-  return await fetchMultiplePages(`/movie/upcoming`, 3);
+  return await fetchMultiplePages(`/trending/${type}/week?`, 3);
 }
 
 async function fetchTrendingAnime() {
@@ -75,14 +61,6 @@ async function fetchTagalogContent() {
 
 async function fetchKDramas() {
   return await fetchMultiplePages(`/discover/tv?with_original_language=ko&sort_by=popularity.desc`, 3);
-}
-
-async function fetchCDramas() {
-  return await fetchMultiplePages(`/discover/tv?with_original_language=zh&sort_by=popularity.desc`, 3);
-}
-
-async function fetchThaiDramas() {
-  return await fetchMultiplePages(`/discover/tv?with_original_language=th&sort_by=popularity.desc`, 3);
 }
 
 async function fetchByGenreId(genreId) {
@@ -128,7 +106,6 @@ async function showDetails(item) {
   
   updateWatchlistButton();
   addToContinueWatching(item);
-  await checkAndDisplayTrailer(item);
 
   const isTv = currentItem.media_type === "tv" || !currentItem.title;
   const seriesOptions = document.getElementById('series-options');
@@ -143,34 +120,6 @@ async function showDetails(item) {
   
   document.getElementById('modal').style.display = 'flex';
   document.body.classList.add('modal-open');
-}
-
-async function checkAndDisplayTrailer(item) {
-  const mediaType = item.media_type || (item.title ? 'movie' : 'tv');
-  const trailerBtn = document.getElementById('trailer-btn');
-  currentTrailerKey = null;
-  trailerBtn.style.display = 'none';
-
-  try {
-    const res = await fetch(`${BASE_URL}/${mediaType}/${item.id}/videos?api_key=${API_KEY}`);
-    const data = await res.json();
-    
-    if (data.results && data.results.length > 0) {
-      const trailer = data.results.find(vid => vid.site === 'YouTube' && vid.type === 'Trailer') || data.results[0];
-      if (trailer && trailer.key) {
-        currentTrailerKey = trailer.key;
-        trailerBtn.style.display = 'inline-block';
-      }
-    }
-  } catch (error) {
-    console.error("Error fetching trailer:", error);
-  }
-}
-
-function openTrailer() {
-  if (!currentTrailerKey) return;
-  const videoIframe = document.getElementById('modal-video');
-  videoIframe.src = `https://www.youtube.com/embed/${currentTrailerKey}?autoplay=1`;
 }
 
 async function loadTVSeasons(tvId) {
@@ -196,20 +145,13 @@ async function loadTVSeasons(tvId) {
       });
     }
 
-    const savedProgress = JSON.parse(localStorage.getItem(`progress_${tvId}`));
-    if (savedProgress) {
-      currentSeason = savedProgress.season;
-      seasonSelect.value = currentSeason;
-      await loadEpisodes(tvId, currentSeason, savedProgress.episode);
-    } else {
-      await loadEpisodes(tvId, 1);
-    }
+    await loadEpisodes(tvId, 1);
   } catch (error) {
     console.error("Error loading TV seasons:", error);
   }
 }
 
-async function loadEpisodes(tvId, seasonNumber, targetEpisode = null) {
+async function loadEpisodes(tvId, seasonNumber) {
   currentSeason = seasonNumber;
   const episodesContainer = document.getElementById('episodes-container');
   episodesContainer.innerHTML = '';
@@ -219,7 +161,7 @@ async function loadEpisodes(tvId, seasonNumber, targetEpisode = null) {
     const data = await res.json();
 
     if (data.episodes && data.episodes.length > 0) {
-      currentEpisode = targetEpisode ? targetEpisode : data.episodes[0].episode_number;
+      currentEpisode = data.episodes[0].episode_number;
 
       data.episodes.forEach(ep => {
         const btn = document.createElement('button');
@@ -229,21 +171,15 @@ async function loadEpisodes(tvId, seasonNumber, targetEpisode = null) {
           document.querySelectorAll('.episode-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           currentEpisode = ep.episode_number;
-          saveTVProgress(tvId, currentSeason, currentEpisode);
           loadVideo();
         };
         episodesContainer.appendChild(btn);
       });
     }
-    saveTVProgress(tvId, currentSeason, currentEpisode);
     loadVideo();
   } catch (error) {
     console.error("Error loading episodes:", error);
   }
-}
-
-function saveTVProgress(tvId, season, episode) {
-  localStorage.setItem(`progress_${tvId}`, JSON.stringify({ season, episode }));
 }
 
 function onSeasonChange() {
@@ -270,6 +206,7 @@ function closeModal() {
   document.body.classList.remove('modal-open');
 }
 
+// Watchlist Logic
 function getWatchlist() {
   return JSON.parse(localStorage.getItem('myList')) || [];
 }
@@ -318,6 +255,7 @@ function renderWatchlistRow() {
   }
 }
 
+// Continue Watching Logic
 function getContinueWatching() {
   return JSON.parse(localStorage.getItem('continueWatching')) || [];
 }
@@ -342,6 +280,7 @@ function renderContinueWatchingRow() {
   }
 }
 
+// Category Tab Filtering
 function filterContent(category, eventElement) {
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
   eventElement.classList.add('active');
@@ -349,14 +288,10 @@ function filterContent(category, eventElement) {
   const continueRow = document.getElementById('continue-row');
   const watchlistRow = document.getElementById('watchlist-row');
   const moviesRow = document.getElementById('movies-row');
-  const topRatedRow = document.getElementById('toprated-row');
-  const upcomingRow = document.getElementById('upcoming-row');
   const tvRow = document.getElementById('tvshows-row');
   const animeRow = document.getElementById('anime-row');
   const tagalogRow = document.getElementById('tagalog-row');
   const kdramaRow = document.getElementById('kdrama-row');
-  const cdramaRow = document.getElementById('cdrama-row');
-  const thaiRow = document.getElementById('thai-row');
 
   const hasWatchlist = getWatchlist().length > 0;
   const hasContinue = getContinueWatching().length > 0;
@@ -365,50 +300,34 @@ function filterContent(category, eventElement) {
     if (hasContinue) continueRow.style.display = 'block';
     if (hasWatchlist) watchlistRow.style.display = 'block';
     moviesRow.style.display = 'block';
-    topRatedRow.style.display = 'block';
-    upcomingRow.style.display = 'block';
     tvRow.style.display = 'block';
     animeRow.style.display = 'block';
     tagalogRow.style.display = 'block';
     kdramaRow.style.display = 'block';
-    cdramaRow.style.display = 'block';
-    thaiRow.style.display = 'block';
   } else if (category === 'movie') {
     continueRow.style.display = 'none';
     watchlistRow.style.display = 'none';
     moviesRow.style.display = 'block';
-    topRatedRow.style.display = 'block';
-    upcomingRow.style.display = 'block';
     tvRow.style.display = 'none';
     animeRow.style.display = 'none';
     tagalogRow.style.display = 'block';
     kdramaRow.style.display = 'none';
-    cdramaRow.style.display = 'none';
-    thaiRow.style.display = 'none';
   } else if (category === 'tv') {
     continueRow.style.display = 'none';
     watchlistRow.style.display = 'none';
     moviesRow.style.display = 'none';
-    topRatedRow.style.display = 'none';
-    upcomingRow.style.display = 'none';
     tvRow.style.display = 'block';
     animeRow.style.display = 'none';
     tagalogRow.style.display = 'none';
     kdramaRow.style.display = 'block';
-    cdramaRow.style.display = 'block';
-    thaiRow.style.display = 'block';
   } else if (category === 'anime') {
     continueRow.style.display = 'none';
     watchlistRow.style.display = 'none';
     moviesRow.style.display = 'none';
-    topRatedRow.style.display = 'none';
-    upcomingRow.style.display = 'none';
     tvRow.style.display = 'none';
     animeRow.style.display = 'block';
     tagalogRow.style.display = 'none';
     kdramaRow.style.display = 'none';
-    cdramaRow.style.display = 'none';
-    thaiRow.style.display = 'none';
   }
 }
 
@@ -425,14 +344,10 @@ async function filterByGenre(genreId, eventElement) {
   
   document.getElementById('continue-row').style.display = 'none';
   document.getElementById('watchlist-row').style.display = 'none';
-  document.getElementById('toprated-row').style.display = 'none';
-  document.getElementById('upcoming-row').style.display = 'none';
   document.getElementById('tvshows-row').style.display = 'none';
   document.getElementById('anime-row').style.display = 'none';
   document.getElementById('tagalog-row').style.display = 'none';
   document.getElementById('kdrama-row').style.display = 'none';
-  document.getElementById('cdrama-row').style.display = 'none';
-  document.getElementById('thai-row').style.display = 'none';
 
   const moviesRow = document.getElementById('movies-row');
   moviesRow.style.display = 'block';
@@ -440,6 +355,7 @@ async function filterByGenre(genreId, eventElement) {
   displayList(genreResults, 'movies-list', 'movie');
 }
 
+// See All Grid Modal Logic
 function openGridModal(category) {
   const modal = document.getElementById('grid-modal');
   const titleEl = document.getElementById('grid-modal-title');
@@ -449,14 +365,10 @@ function openGridModal(category) {
   let items = fullDataCache[category] || [];
   
   if (category === 'movies') titleEl.textContent = 'Trending Movies';
-  if (category === 'toprated') titleEl.textContent = 'Top Rated Films';
-  if (category === 'upcoming') titleEl.textContent = 'Upcoming Releases';
   if (category === 'tv') titleEl.textContent = 'Trending TV Shows';
   if (category === 'anime') titleEl.textContent = 'Trending Anime';
   if (category === 'tagalog') titleEl.textContent = 'Trending Tagalog Movies';
   if (category === 'kdrama') titleEl.textContent = 'Trending K-Dramas';
-  if (category === 'cdrama') titleEl.textContent = 'Trending Chinese Dramas';
-  if (category === 'thai') titleEl.textContent = 'Trending Thai Dramas';
 
   items.forEach(item => {
     if (!item.poster_path) return;
@@ -527,24 +439,16 @@ async function searchTMDB() {
 
 async function init() {
   const movies = await fetchTrending('movie');
-  const topRated = await fetchTopRatedMovies();
-  const upcoming = await fetchUpcomingMovies();
   const tvShows = await fetchTrending('tv');
   const anime = await fetchTrendingAnime();
   const tagalogMovies = await fetchTagalogContent();
   const kDramas = await fetchKDramas();
-  const cDramas = await fetchCDramas();
-  const thaiDramas = await fetchThaiDramas();
 
   fullDataCache.movies = movies;
-  fullDataCache.toprated = topRated;
-  fullDataCache.upcoming = upcoming;
   fullDataCache.tv = tvShows;
   fullDataCache.anime = anime;
   fullDataCache.tagalog = tagalogMovies;
   fullDataCache.kdrama = kDramas;
-  fullDataCache.cdrama = cDramas;
-  fullDataCache.thai = thaiDramas;
 
   if (movies.length > 0) {
     displayBanner(movies[Math.floor(Math.random() * movies.length)]);
@@ -552,14 +456,10 @@ async function init() {
   
   document.querySelector('#movies-row h2').textContent = 'Trending Movies';
   displayList(movies, 'movies-list', 'movie');
-  displayList(topRated, 'toprated-list', 'movie');
-  displayList(upcoming, 'upcoming-list', 'movie');
   displayList(tvShows, 'tvshows-list', 'tv');
   displayList(anime, 'anime-list', 'tv');
   displayList(tagalogMovies, 'tagalog-list', 'movie');
   displayList(kDramas, 'kdrama-list', 'tv');
-  displayList(cDramas, 'cdrama-list', 'tv');
-  displayList(thaiDramas, 'thai-list', 'tv');
   
   renderWatchlistRow();
   renderContinueWatchingRow();
