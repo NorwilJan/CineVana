@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
   <meta charset="UTF-8" />
 
   <meta
@@ -43,23 +41,21 @@
     defer
     src="js/home.js"
   ></script>
-
 </head>
-
 
 <body>
 
-  <!-- NAVBAR -->
+  <!-- =========================
+       NAVBAR
+  ========================== -->
 
   <header class="navbar">
 
     <a href="index.html">
-
       <img
         src="logo.png"
         alt="Website Logo"
       />
-
     </a>
 
     <div class="nav-links">
@@ -81,7 +77,9 @@
   </header>
 
 
-  <!-- HERO BANNER -->
+  <!-- =========================
+       HERO BANNER
+  ========================== -->
 
   <section
     class="banner"
@@ -96,11 +94,8 @@
         class="banner-btn"
         onclick="playBanner()"
       >
-
         <i class="fa-solid fa-play"></i>
-
         Watch Now
-
       </button>
 
     </div>
@@ -108,7 +103,9 @@
   </section>
 
 
-  <!-- CATEGORY FILTER TABS -->
+  <!-- =========================
+       CATEGORY FILTERS
+  ========================== -->
 
   <nav class="filter-tabs">
 
@@ -143,7 +140,9 @@
   </nav>
 
 
-  <!-- GENRE FILTER CHIPS -->
+  <!-- =========================
+       GENRE FILTERS
+  ========================== -->
 
   <div
     class="genre-tabs"
@@ -195,7 +194,9 @@
   </div>
 
 
-  <!-- CONTINUE WATCHING -->
+  <!-- =========================
+       CONTINUE WATCHING
+  ========================== -->
 
   <div
     class="row"
@@ -219,7 +220,9 @@
   </div>
 
 
-  <!-- MY LIST -->
+  <!-- =========================
+       MY LIST
+  ========================== -->
 
   <div
     class="row"
@@ -243,7 +246,9 @@
   </div>
 
 
-  <!-- TRENDING MOVIES -->
+  <!-- =========================
+       TRENDING MOVIES
+  ========================== -->
 
   <div
     class="row"
@@ -273,7 +278,9 @@
   </div>
 
 
-  <!-- TRENDING TV SHOWS -->
+  <!-- =========================
+       TRENDING TV
+  ========================== -->
 
   <div
     class="row"
@@ -303,7 +310,9 @@
   </div>
 
 
-  <!-- TRENDING ANIME -->
+  <!-- =========================
+       TRENDING ANIME
+  ========================== -->
 
   <div
     class="row"
@@ -333,7 +342,9 @@
   </div>
 
 
-  <!-- TRENDING TAGALOG MOVIES -->
+  <!-- =========================
+       TAGALOG MOVIES
+  ========================== -->
 
   <div
     class="row"
@@ -363,67 +374,9 @@
   </div>
 
 
-  <!-- TRENDING VIVAMAX -->
-
-  <div
-    class="row"
-    id="vivamax-row"
-  >
-
-    <div class="row-header">
-
-      <h2>
-        🔥 Trending Vivamax Movies
-      </h2>
-
-      <button
-        class="see-all-btn"
-        onclick="openGridModal('vivamax')"
-      >
-        See All &gt;
-      </button>
-
-    </div>
-
-    <div
-      class="list"
-      id="vivamax-list"
-    ></div>
-
-  </div>
-
-
-  <!-- TRENDING KOREAN EROTICA -->
-
-  <div
-    class="row"
-    id="korean-erotica-row"
-  >
-
-    <div class="row-header">
-
-      <h2>
-        🇰🇷 Trending Korean Erotica
-      </h2>
-
-      <button
-        class="see-all-btn"
-        onclick="openGridModal('koreanErotica')"
-      >
-        See All &gt;
-      </button>
-
-    </div>
-
-    <div
-      class="list"
-      id="korean-erotica-list"
-    ></div>
-
-  </div>
-
-
-  <!-- TRENDING K-DRAMAS -->
+  <!-- =========================
+       K-DRAMAS
+  ========================== -->
 
   <div
     class="row"
@@ -453,7 +406,41 @@
   </div>
 
 
-  <!-- DETAILS MODAL -->
+  <!-- =========================
+       TOP RATED VIVAMAX
+  ========================== -->
+
+  <div
+    class="row"
+    id="vivamax-row"
+  >
+
+    <div class="row-header">
+
+      <h2>
+        Top Rated Vivamax Movies
+      </h2>
+
+      <button
+        class="see-all-btn"
+        onclick="openGridModal('vivamax')"
+      >
+        See All &gt;
+      </button>
+
+    </div>
+
+    <div
+      class="list"
+      id="vivamax-list"
+    ></div>
+
+  </div>
+
+
+  <!-- =========================
+       MOVIE / TV DETAILS MODAL
+  ========================== -->
 
   <div
     class="modal"
@@ -479,7 +466,9 @@
 
         <div class="modal-text">
 
-          <h2 id="modal-title"></h2>
+          <h2
+            id="modal-title"
+          ></h2>
 
           <div
             class="stars"
@@ -494,10 +483,11 @@
             Add to List
           </button>
 
-          <p id="modal-description"></p>
+          <p
+            id="modal-description"
+          ></p>
 
-
-          <!-- TV SERIES OPTIONS -->
+          <!-- TV CONTROLS -->
 
           <div
             id="series-options"
@@ -530,6 +520,7 @@
         <iframe
           id="modal-video"
           allowfullscreen
+          loading="lazy"
         ></iframe>
 
       </div>
@@ -539,7 +530,9 @@
   </div>
 
 
-  <!-- SEE ALL GRID MODAL -->
+  <!-- =========================
+       SEE ALL GRID MODAL
+  ========================== -->
 
   <div
     class="grid-modal"
@@ -571,7 +564,9 @@
   </div>
 
 
-  <!-- SEARCH MODAL -->
+  <!-- =========================
+       SEARCH MODAL
+  ========================== -->
 
   <div
     class="search-modal"
@@ -600,7 +595,9 @@
   </div>
 
 
-  <!-- FOOTER -->
+  <!-- =========================
+       FOOTER
+  ========================== -->
 
   <footer class="footer">
 
@@ -631,5 +628,4 @@
   </footer>
 
 </body>
-
 </html>
