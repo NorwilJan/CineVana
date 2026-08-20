@@ -46,9 +46,12 @@
 
 </head>
 
+
 <body>
 
-  <!-- NAVBAR -->
+  <!-- ================================
+       NAVBAR
+  ================================= -->
 
   <header class="navbar">
 
@@ -60,6 +63,7 @@
       />
 
     </a>
+
 
     <div class="nav-links">
 
@@ -80,7 +84,9 @@
   </header>
 
 
-  <!-- HERO BANNER -->
+  <!-- ================================
+       HERO BANNER
+  ================================= -->
 
   <section
     class="banner"
@@ -107,7 +113,9 @@
   </section>
 
 
-  <!-- CATEGORY FILTER -->
+  <!-- ================================
+       CATEGORY FILTER
+  ================================= -->
 
   <nav class="filter-tabs">
 
@@ -118,6 +126,7 @@
       All
     </button>
 
+
     <button
       class="tab-btn"
       onclick="filterContent('movie', this)"
@@ -125,12 +134,14 @@
       Movies
     </button>
 
+
     <button
       class="tab-btn"
       onclick="filterContent('tv', this)"
     >
       TV Shows
     </button>
+
 
     <button
       class="tab-btn"
@@ -142,7 +153,9 @@
   </nav>
 
 
-  <!-- GENRE FILTER -->
+  <!-- ================================
+       GENRE FILTER
+  ================================= -->
 
   <div
     class="genre-tabs"
@@ -156,12 +169,14 @@
       All Genres
     </button>
 
+
     <button
       class="genre-btn"
       onclick="filterByGenre(28, this)"
     >
       Action
     </button>
+
 
     <button
       class="genre-btn"
@@ -170,6 +185,7 @@
       Comedy
     </button>
 
+
     <button
       class="genre-btn"
       onclick="filterByGenre(27, this)"
@@ -177,12 +193,14 @@
       Horror
     </button>
 
+
     <button
       class="genre-btn"
       onclick="filterByGenre(10749, this)"
     >
       Romance
     </button>
+
 
     <button
       class="genre-btn"
@@ -194,7 +212,9 @@
   </div>
 
 
-  <!-- CONTINUE WATCHING -->
+  <!-- ================================
+       CONTINUE WATCHING
+  ================================= -->
 
   <div
     class="row"
@@ -210,6 +230,7 @@
 
     </div>
 
+
     <div
       class="list"
       id="continue-list"
@@ -218,7 +239,9 @@
   </div>
 
 
-  <!-- MY LIST -->
+  <!-- ================================
+       MY LIST
+  ================================= -->
 
   <div
     class="row"
@@ -234,6 +257,7 @@
 
     </div>
 
+
     <div
       class="list"
       id="watchlist-list"
@@ -242,7 +266,9 @@
   </div>
 
 
-  <!-- TRENDING MOVIES -->
+  <!-- ================================
+       MOVIES
+  ================================= -->
 
   <div
     class="row"
@@ -264,6 +290,7 @@
 
     </div>
 
+
     <div
       class="list"
       id="movies-list"
@@ -272,7 +299,9 @@
   </div>
 
 
-  <!-- TRENDING TV -->
+  <!-- ================================
+       TV SHOWS
+  ================================= -->
 
   <div
     class="row"
@@ -294,6 +323,7 @@
 
     </div>
 
+
     <div
       class="list"
       id="tvshows-list"
@@ -302,7 +332,9 @@
   </div>
 
 
-  <!-- TRENDING ANIME -->
+  <!-- ================================
+       ANIME
+  ================================= -->
 
   <div
     class="row"
@@ -324,6 +356,7 @@
 
     </div>
 
+
     <div
       class="list"
       id="anime-list"
@@ -332,7 +365,9 @@
   </div>
 
 
-  <!-- TAGALOG -->
+  <!-- ================================
+       TAGALOG
+  ================================= -->
 
   <div
     class="row"
@@ -354,6 +389,7 @@
 
     </div>
 
+
     <div
       class="list"
       id="tagalog-list"
@@ -362,7 +398,9 @@
   </div>
 
 
-  <!-- K-DRAMA -->
+  <!-- ================================
+       K-DRAMAS
+  ================================= -->
 
   <div
     class="row"
@@ -384,6 +422,7 @@
 
     </div>
 
+
     <div
       class="list"
       id="kdrama-list"
@@ -392,37 +431,9 @@
   </div>
 
 
-  <!-- TOP RATED VIVAMAX -->
-
-  <div
-    class="row"
-    id="vivamax-row"
-  >
-
-    <div class="row-header">
-
-      <h2>
-        Top Rated Vivamax
-      </h2>
-
-      <button
-        class="see-all-btn"
-        onclick="openGridModal('vivamax')"
-      >
-        See All &gt;
-      </button>
-
-    </div>
-
-    <div
-      class="list"
-      id="vivamax-list"
-    ></div>
-
-  </div>
-
-
-  <!-- MOVIE / TV DETAILS MODAL -->
+  <!-- ================================
+       MOVIE DETAILS MODAL
+  ================================= -->
 
   <div
     class="modal"
@@ -450,9 +461,7 @@
 
         <div class="modal-text">
 
-          <h2
-            id="modal-title"
-          ></h2>
+          <h2 id="modal-title"></h2>
 
 
           <div
@@ -470,12 +479,10 @@
           </button>
 
 
-          <p
-            id="modal-description"
-          ></p>
+          <p id="modal-description"></p>
 
 
-          <!-- TV SERIES OPTIONS -->
+          <!-- TV OPTIONS -->
 
           <div
             id="series-options"
@@ -502,7 +509,7 @@
       </div>
 
 
-      <!-- VIDEO PLAYER -->
+      <!-- VIDEO -->
 
       <div class="video-container">
 
@@ -518,12 +525,16 @@
   </div>
 
 
-  <!-- INFINITE SCROLL SEE ALL MODAL -->
+  <!-- ================================
+       SEE ALL MODAL
+  ================================= -->
 
   <div
     class="grid-modal"
     id="grid-modal"
   >
+
+    <!-- THIS HEADER NEVER SCROLLS -->
 
     <div class="grid-modal-header">
 
@@ -544,6 +555,8 @@
     </div>
 
 
+    <!-- ONLY THIS AREA SCROLLS -->
+
     <div
       class="grid-container"
       id="grid-modal-results"
@@ -552,7 +565,9 @@
   </div>
 
 
-  <!-- SEARCH MODAL -->
+  <!-- ================================
+       SEARCH MODAL
+  ================================= -->
 
   <div
     class="search-modal"
@@ -583,7 +598,9 @@
   </div>
 
 
-  <!-- FOOTER -->
+  <!-- ================================
+       FOOTER
+  ================================= -->
 
   <footer class="footer">
 
