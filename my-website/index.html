@@ -1,157 +1,635 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
   <title>StreamVault</title>
-  <link rel="stylesheet" href="css/home.css">
-  <link rel="preload" href="css/home.css" as="style">
-  <link rel="preload" href="js/home.js" as="script">
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script defer src="js/home.js"></script>
+
+  <link
+    rel="stylesheet"
+    href="css/home.css"
+  />
+
+  <link
+    rel="preload"
+    href="css/home.css"
+    as="style"
+  />
+
+  <link
+    rel="preload"
+    href="js/home.js"
+    as="script"
+  />
+
+  <link
+    rel="manifest"
+    href="manifest.json"
+  />
+
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+  />
+
+  <script
+    defer
+    src="js/home.js"
+  ></script>
+
 </head>
 
+
 <body>
+
+  <!-- NAVBAR -->
+
   <header class="navbar">
+
     <a href="index.html">
-      <img src="logo.png" alt="Website Logo" />
+
+      <img
+        src="logo.png"
+        alt="Website Logo"
+      />
+
     </a>
+
     <div class="nav-links">
-      <a href="index.html">Home</a>
-      <input type="text" class="search-bar" placeholder="Search..." readonly onclick="openSearchModal()" />
+
+      <a href="index.html">
+        Home
+      </a>
+
+      <input
+        type="text"
+        class="search-bar"
+        placeholder="Search..."
+        readonly
+        onclick="openSearchModal()"
+      />
+
     </div>
+
   </header>
 
-  <section class="banner" id="banner">
+
+  <!-- HERO BANNER -->
+
+  <section
+    class="banner"
+    id="banner"
+  >
+
     <div class="banner-content">
+
       <h1 id="banner-title"></h1>
-      <button class="banner-btn" onclick="playBanner()"><i class="fa-solid fa-play"></i> Watch Now</button>
+
+      <button
+        class="banner-btn"
+        onclick="playBanner()"
+      >
+
+        <i class="fa-solid fa-play"></i>
+
+        Watch Now
+
+      </button>
+
     </div>
+
   </section>
 
+
   <!-- CATEGORY FILTER TABS -->
+
   <nav class="filter-tabs">
-    <button class="tab-btn active" onclick="filterContent('all', this)">All</button>
-    <button class="tab-btn" onclick="filterContent('movie', this)">Movies</button>
-    <button class="tab-btn" onclick="filterContent('tv', this)">TV Shows</button>
-    <button class="tab-btn" onclick="filterContent('anime', this)">Anime</button>
+
+    <button
+      class="tab-btn active"
+      onclick="filterContent('all', this)"
+    >
+      All
+    </button>
+
+    <button
+      class="tab-btn"
+      onclick="filterContent('movie', this)"
+    >
+      Movies
+    </button>
+
+    <button
+      class="tab-btn"
+      onclick="filterContent('tv', this)"
+    >
+      TV Shows
+    </button>
+
+    <button
+      class="tab-btn"
+      onclick="filterContent('anime', this)"
+    >
+      Anime
+    </button>
+
   </nav>
 
+
   <!-- GENRE FILTER CHIPS -->
-  <div class="genre-tabs" id="genre-container">
-    <button class="genre-btn active" onclick="filterByGenre('all', this)">All Genres</button>
-    <button class="genre-btn" onclick="filterByGenre(28, this)">Action</button>
-    <button class="genre-btn" onclick="filterByGenre(35, this)">Comedy</button>
-    <button class="genre-btn" onclick="filterByGenre(27, this)">Horror</button>
-    <button class="genre-btn" onclick="filterByGenre(10749, this)">Romance</button>
-    <button class="genre-btn" onclick="filterByGenre(878, this)">Sci-Fi</button>
+
+  <div
+    class="genre-tabs"
+    id="genre-container"
+  >
+
+    <button
+      class="genre-btn active"
+      onclick="filterByGenre('all', this)"
+    >
+      All Genres
+    </button>
+
+    <button
+      class="genre-btn"
+      onclick="filterByGenre(28, this)"
+    >
+      Action
+    </button>
+
+    <button
+      class="genre-btn"
+      onclick="filterByGenre(35, this)"
+    >
+      Comedy
+    </button>
+
+    <button
+      class="genre-btn"
+      onclick="filterByGenre(27, this)"
+    >
+      Horror
+    </button>
+
+    <button
+      class="genre-btn"
+      onclick="filterByGenre(10749, this)"
+    >
+      Romance
+    </button>
+
+    <button
+      class="genre-btn"
+      onclick="filterByGenre(878, this)"
+    >
+      Sci-Fi
+    </button>
+
   </div>
 
-  <!-- CONTINUE WATCHING ROW -->
-  <div class="row" id="continue-row" style="display: none;">
+
+  <!-- CONTINUE WATCHING -->
+
+  <div
+    class="row"
+    id="continue-row"
+    style="display: none;"
+  >
+
     <div class="row-header">
-      <h2>Continue Watching</h2>
+
+      <h2>
+        Continue Watching
+      </h2>
+
     </div>
-    <div class="list" id="continue-list"></div>
+
+    <div
+      class="list"
+      id="continue-list"
+    ></div>
+
   </div>
 
-  <!-- MY LIST ROW -->
-  <div class="row" id="watchlist-row" style="display: none;">
+
+  <!-- MY LIST -->
+
+  <div
+    class="row"
+    id="watchlist-row"
+    style="display: none;"
+  >
+
     <div class="row-header">
-      <h2>My List</h2>
+
+      <h2>
+        My List
+      </h2>
+
     </div>
-    <div class="list" id="watchlist-list"></div>
+
+    <div
+      class="list"
+      id="watchlist-list"
+    ></div>
+
   </div>
 
-  <div class="row" id="movies-row">
+
+  <!-- TRENDING MOVIES -->
+
+  <div
+    class="row"
+    id="movies-row"
+  >
+
     <div class="row-header">
-      <h2>Trending Movies</h2>
-      <button class="see-all-btn" onclick="openGridModal('movies')">See All &gt;</button>
+
+      <h2>
+        Trending Movies
+      </h2>
+
+      <button
+        class="see-all-btn"
+        onclick="openGridModal('movies')"
+      >
+        See All &gt;
+      </button>
+
     </div>
-    <div class="list" id="movies-list"></div>
+
+    <div
+      class="list"
+      id="movies-list"
+    ></div>
+
   </div>
 
-  <div class="row" id="tvshows-row">
+
+  <!-- TRENDING TV SHOWS -->
+
+  <div
+    class="row"
+    id="tvshows-row"
+  >
+
     <div class="row-header">
-      <h2>Trending TV Shows</h2>
-      <button class="see-all-btn" onclick="openGridModal('tv')">See All &gt;</button>
+
+      <h2>
+        Trending TV Shows
+      </h2>
+
+      <button
+        class="see-all-btn"
+        onclick="openGridModal('tv')"
+      >
+        See All &gt;
+      </button>
+
     </div>
-    <div class="list" id="tvshows-list"></div>
+
+    <div
+      class="list"
+      id="tvshows-list"
+    ></div>
+
   </div>
 
-  <div class="row" id="anime-row">
+
+  <!-- TRENDING ANIME -->
+
+  <div
+    class="row"
+    id="anime-row"
+  >
+
     <div class="row-header">
-      <h2>Trending Anime</h2>
-      <button class="see-all-btn" onclick="openGridModal('anime')">See All &gt;</button>
+
+      <h2>
+        Trending Anime
+      </h2>
+
+      <button
+        class="see-all-btn"
+        onclick="openGridModal('anime')"
+      >
+        See All &gt;
+      </button>
+
     </div>
-    <div class="list" id="anime-list"></div>
+
+    <div
+      class="list"
+      id="anime-list"
+    ></div>
+
   </div>
 
-  <div class="row" id="tagalog-row">
+
+  <!-- TRENDING TAGALOG MOVIES -->
+
+  <div
+    class="row"
+    id="tagalog-row"
+  >
+
     <div class="row-header">
-      <h2>Trending Tagalog Movies</h2>
-      <button class="see-all-btn" onclick="openGridModal('tagalog')">See All &gt;</button>
+
+      <h2>
+        Trending Tagalog Movies
+      </h2>
+
+      <button
+        class="see-all-btn"
+        onclick="openGridModal('tagalog')"
+      >
+        See All &gt;
+      </button>
+
     </div>
-    <div class="list" id="tagalog-list"></div>
+
+    <div
+      class="list"
+      id="tagalog-list"
+    ></div>
+
   </div>
 
-  <div class="row" id="kdrama-row">
+
+  <!-- TRENDING VIVAMAX -->
+
+  <div
+    class="row"
+    id="vivamax-row"
+  >
+
     <div class="row-header">
-      <h2>Trending K-Dramas</h2>
-      <button class="see-all-btn" onclick="openGridModal('kdrama')">See All &gt;</button>
+
+      <h2>
+        🔥 Trending Vivamax Movies
+      </h2>
+
+      <button
+        class="see-all-btn"
+        onclick="openGridModal('vivamax')"
+      >
+        See All &gt;
+      </button>
+
     </div>
-    <div class="list" id="kdrama-list"></div>
+
+    <div
+      class="list"
+      id="vivamax-list"
+    ></div>
+
   </div>
 
-  <div class="modal" id="modal">
+
+  <!-- TRENDING KOREAN EROTICA -->
+
+  <div
+    class="row"
+    id="korean-erotica-row"
+  >
+
+    <div class="row-header">
+
+      <h2>
+        🇰🇷 Trending Korean Erotica
+      </h2>
+
+      <button
+        class="see-all-btn"
+        onclick="openGridModal('koreanErotica')"
+      >
+        See All &gt;
+      </button>
+
+    </div>
+
+    <div
+      class="list"
+      id="korean-erotica-list"
+    ></div>
+
+  </div>
+
+
+  <!-- TRENDING K-DRAMAS -->
+
+  <div
+    class="row"
+    id="kdrama-row"
+  >
+
+    <div class="row-header">
+
+      <h2>
+        Trending K-Dramas
+      </h2>
+
+      <button
+        class="see-all-btn"
+        onclick="openGridModal('kdrama')"
+      >
+        See All &gt;
+      </button>
+
+    </div>
+
+    <div
+      class="list"
+      id="kdrama-list"
+    ></div>
+
+  </div>
+
+
+  <!-- DETAILS MODAL -->
+
+  <div
+    class="modal"
+    id="modal"
+  >
+
     <div class="modal-content">
-      <span class="close" onclick="closeModal()">&times;</span>
+
+      <span
+        class="close"
+        onclick="closeModal()"
+      >
+        &times;
+      </span>
+
       <div class="modal-body">
-        <img id="modal-image" src="" alt="" />
+
+        <img
+          id="modal-image"
+          src=""
+          alt=""
+        />
+
         <div class="modal-text">
+
           <h2 id="modal-title"></h2>
-          <div class="stars" id="modal-rating"></div>
-          <button id="watchlist-btn" class="watchlist-btn" onclick="toggleWatchlist()">Add to List</button>
+
+          <div
+            class="stars"
+            id="modal-rating"
+          ></div>
+
+          <button
+            id="watchlist-btn"
+            class="watchlist-btn"
+            onclick="toggleWatchlist()"
+          >
+            Add to List
+          </button>
+
           <p id="modal-description"></p>
-          
-          <div id="series-options" class="series-options" style="display: none;">
-            <select id="season-select" class="season-select" onchange="onSeasonChange()"></select>
-            <div id="episodes-container" class="episodes-container"></div>
+
+
+          <!-- TV SERIES OPTIONS -->
+
+          <div
+            id="series-options"
+            class="series-options"
+            style="display: none;"
+          >
+
+            <select
+              id="season-select"
+              class="season-select"
+              onchange="onSeasonChange()"
+            ></select>
+
+            <div
+              id="episodes-container"
+              class="episodes-container"
+            ></div>
+
           </div>
+
         </div>
+
       </div>
-      
+
+
+      <!-- VIDEO PLAYER -->
+
       <div class="video-container">
-        <iframe id="modal-video" allowfullscreen></iframe>
+
+        <iframe
+          id="modal-video"
+          allowfullscreen
+        ></iframe>
+
       </div>
+
     </div>
+
   </div>
+
 
   <!-- SEE ALL GRID MODAL -->
-  <div class="grid-modal" id="grid-modal">
+
+  <div
+    class="grid-modal"
+    id="grid-modal"
+  >
+
     <div class="grid-modal-header">
-      <h2 id="grid-modal-title">Category</h2>
-      <span class="close" onclick="closeGridModal()">&times;</span>
+
+      <h2
+        id="grid-modal-title"
+      >
+        Category
+      </h2>
+
+      <span
+        class="close"
+        onclick="closeGridModal()"
+      >
+        &times;
+      </span>
+
     </div>
-    <div class="grid-container" id="grid-modal-results"></div>
+
+    <div
+      class="grid-container"
+      id="grid-modal-results"
+    ></div>
+
   </div>
 
-  <div class="search-modal" id="search-modal">
-    <span class="close" onclick="closeSearchModal()">&times;</span>
-    <input type="text" id="search-input" placeholder="Search for a movie or show..." oninput="debounceSearch()" />
-    <div class="results" id="search-results"></div>
+
+  <!-- SEARCH MODAL -->
+
+  <div
+    class="search-modal"
+    id="search-modal"
+  >
+
+    <span
+      class="close"
+      onclick="closeSearchModal()"
+    >
+      &times;
+    </span>
+
+    <input
+      type="text"
+      id="search-input"
+      placeholder="Search for a movie or show..."
+      oninput="debounceSearch()"
+    />
+
+    <div
+      class="results"
+      id="search-results"
+    ></div>
+
   </div>
+
+
+  <!-- FOOTER -->
 
   <footer class="footer">
+
     <div class="footer-content">
-      <p>&copy; 2026 StreamVault. All rights reserved.</p>
+
+      <p>
+        &copy; 2026 StreamVault. All rights reserved.
+      </p>
+
       <div class="footer-links">
-        <a href="#">Disclaimer</a>
-        <a href="#">About Us</a>
-        <a href="#">Contact Us</a>
+
+        <a href="#">
+          Disclaimer
+        </a>
+
+        <a href="#">
+          About Us
+        </a>
+
+        <a href="#">
+          Contact Us
+        </a>
+
       </div>
+
     </div>
+
   </footer>
+
 </body>
+
 </html>
