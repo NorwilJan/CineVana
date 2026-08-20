@@ -46,12 +46,11 @@
 
 </head>
 
-
 <body>
 
-  <!-- ================================
+  <!-- =========================
        NAVBAR
-  ================================= -->
+  ========================== -->
 
   <header class="navbar">
 
@@ -63,7 +62,6 @@
       />
 
     </a>
-
 
     <div class="nav-links">
 
@@ -84,9 +82,9 @@
   </header>
 
 
-  <!-- ================================
-       HERO BANNER
-  ================================= -->
+  <!-- =========================
+       BANNER
+  ========================== -->
 
   <section
     class="banner"
@@ -113,9 +111,9 @@
   </section>
 
 
-  <!-- ================================
+  <!-- =========================
        CATEGORY FILTER
-  ================================= -->
+  ========================== -->
 
   <nav class="filter-tabs">
 
@@ -126,7 +124,6 @@
       All
     </button>
 
-
     <button
       class="tab-btn"
       onclick="filterContent('movie', this)"
@@ -134,14 +131,12 @@
       Movies
     </button>
 
-
     <button
       class="tab-btn"
       onclick="filterContent('tv', this)"
     >
       TV Shows
     </button>
-
 
     <button
       class="tab-btn"
@@ -153,9 +148,9 @@
   </nav>
 
 
-  <!-- ================================
-       GENRE FILTER
-  ================================= -->
+  <!-- =========================
+       GENRES
+  ========================== -->
 
   <div
     class="genre-tabs"
@@ -169,14 +164,12 @@
       All Genres
     </button>
 
-
     <button
       class="genre-btn"
       onclick="filterByGenre(28, this)"
     >
       Action
     </button>
-
 
     <button
       class="genre-btn"
@@ -185,7 +178,6 @@
       Comedy
     </button>
 
-
     <button
       class="genre-btn"
       onclick="filterByGenre(27, this)"
@@ -193,14 +185,12 @@
       Horror
     </button>
 
-
     <button
       class="genre-btn"
       onclick="filterByGenre(10749, this)"
     >
       Romance
     </button>
-
 
     <button
       class="genre-btn"
@@ -212,14 +202,14 @@
   </div>
 
 
-  <!-- ================================
+  <!-- =========================
        CONTINUE WATCHING
-  ================================= -->
+  ========================== -->
 
   <div
     class="row"
     id="continue-row"
-    style="display: none;"
+    style="display:none;"
   >
 
     <div class="row-header">
@@ -230,7 +220,6 @@
 
     </div>
 
-
     <div
       class="list"
       id="continue-list"
@@ -239,14 +228,14 @@
   </div>
 
 
-  <!-- ================================
+  <!-- =========================
        MY LIST
-  ================================= -->
+  ========================== -->
 
   <div
     class="row"
     id="watchlist-row"
-    style="display: none;"
+    style="display:none;"
   >
 
     <div class="row-header">
@@ -257,7 +246,6 @@
 
     </div>
 
-
     <div
       class="list"
       id="watchlist-list"
@@ -266,9 +254,9 @@
   </div>
 
 
-  <!-- ================================
-       MOVIES
-  ================================= -->
+  <!-- =========================
+       TRENDING MOVIES
+  ========================== -->
 
   <div
     class="row"
@@ -290,7 +278,6 @@
 
     </div>
 
-
     <div
       class="list"
       id="movies-list"
@@ -299,9 +286,9 @@
   </div>
 
 
-  <!-- ================================
-       TV SHOWS
-  ================================= -->
+  <!-- =========================
+       TRENDING TV
+  ========================== -->
 
   <div
     class="row"
@@ -323,7 +310,6 @@
 
     </div>
 
-
     <div
       class="list"
       id="tvshows-list"
@@ -332,9 +318,9 @@
   </div>
 
 
-  <!-- ================================
-       ANIME
-  ================================= -->
+  <!-- =========================
+       TRENDING ANIME
+  ========================== -->
 
   <div
     class="row"
@@ -356,7 +342,6 @@
 
     </div>
 
-
     <div
       class="list"
       id="anime-list"
@@ -365,9 +350,9 @@
   </div>
 
 
-  <!-- ================================
+  <!-- =========================
        TAGALOG
-  ================================= -->
+  ========================== -->
 
   <div
     class="row"
@@ -389,7 +374,6 @@
 
     </div>
 
-
     <div
       class="list"
       id="tagalog-list"
@@ -398,9 +382,9 @@
   </div>
 
 
-  <!-- ================================
+  <!-- =========================
        K-DRAMAS
-  ================================= -->
+  ========================== -->
 
   <div
     class="row"
@@ -422,7 +406,6 @@
 
     </div>
 
-
     <div
       class="list"
       id="kdrama-list"
@@ -431,9 +414,41 @@
   </div>
 
 
-  <!-- ================================
+  <!-- =========================
+       TOP RATED VIVAMAX
+  ========================== -->
+
+  <div
+    class="row"
+    id="vivamax-row"
+  >
+
+    <div class="row-header">
+
+      <h2>
+        Top Rated Vivamax
+      </h2>
+
+      <button
+        class="see-all-btn"
+        onclick="openGridModal('vivamax')"
+      >
+        See All &gt;
+      </button>
+
+    </div>
+
+    <div
+      class="list"
+      id="vivamax-list"
+    ></div>
+
+  </div>
+
+
+  <!-- =========================
        MOVIE DETAILS MODAL
-  ================================= -->
+  ========================== -->
 
   <div
     class="modal"
@@ -449,7 +464,6 @@
         &times;
       </span>
 
-
       <div class="modal-body">
 
         <img
@@ -458,17 +472,16 @@
           alt=""
         />
 
-
         <div class="modal-text">
 
-          <h2 id="modal-title"></h2>
-
+          <h2
+            id="modal-title"
+          ></h2>
 
           <div
             class="stars"
             id="modal-rating"
           ></div>
-
 
           <button
             id="watchlist-btn"
@@ -478,8 +491,9 @@
             Add to List
           </button>
 
-
-          <p id="modal-description"></p>
+          <p
+            id="modal-description"
+          ></p>
 
 
           <!-- TV OPTIONS -->
@@ -487,7 +501,7 @@
           <div
             id="series-options"
             class="series-options"
-            style="display: none;"
+            style="display:none;"
           >
 
             <select
@@ -495,7 +509,6 @@
               class="season-select"
               onchange="onSeasonChange()"
             ></select>
-
 
             <div
               id="episodes-container"
@@ -525,16 +538,16 @@
   </div>
 
 
-  <!-- ================================
+  <!-- =========================
        SEE ALL MODAL
-  ================================= -->
+  ========================== -->
 
   <div
     class="grid-modal"
     id="grid-modal"
   >
 
-    <!-- THIS HEADER NEVER SCROLLS -->
+    <!-- FIXED HEADER -->
 
     <div class="grid-modal-header">
 
@@ -543,7 +556,6 @@
       >
         Category
       </h2>
-
 
       <span
         class="close"
@@ -558,16 +570,44 @@
     <!-- ONLY THIS AREA SCROLLS -->
 
     <div
-      class="grid-container"
-      id="grid-modal-results"
-    ></div>
+      class="grid-scroll-area"
+      id="grid-scroll-area"
+    >
+
+      <div
+        class="grid-container"
+        id="grid-modal-results"
+      ></div>
+
+
+      <!-- LOADING -->
+
+      <div
+        class="grid-loading"
+        id="grid-loading"
+      >
+
+        Loading more...
+
+      </div>
+
+
+      <!-- END -->
+
+      <div
+        class="grid-end"
+        id="grid-end"
+        style="display:none;"
+      ></div>
+
+    </div>
 
   </div>
 
 
-  <!-- ================================
+  <!-- =========================
        SEARCH MODAL
-  ================================= -->
+  ========================== -->
 
   <div
     class="search-modal"
@@ -581,14 +621,12 @@
       &times;
     </span>
 
-
     <input
       type="text"
       id="search-input"
       placeholder="Search for a movie or show..."
       oninput="debounceSearch()"
     />
-
 
     <div
       class="results"
@@ -598,9 +636,9 @@
   </div>
 
 
-  <!-- ================================
+  <!-- =========================
        FOOTER
-  ================================= -->
+  ========================== -->
 
   <footer class="footer">
 
@@ -610,7 +648,6 @@
         &copy; 2026 StreamVault.
         All rights reserved.
       </p>
-
 
       <div class="footer-links">
 
