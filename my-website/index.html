@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Website</title>
+  <title>StreamVault</title>
   <link rel="stylesheet" href="css/home.css">
   <link rel="preload" href="css/home.css" as="style">
   <link rel="preload" href="js/home.js" as="script">
@@ -13,7 +13,7 @@
 </head>
 
 <body>
-  <div class="navbar">
+  <header class="navbar">
     <a href="index.html">
       <img src="logo.png" alt="Website Logo" />
     </a>
@@ -21,22 +21,22 @@
       <a href="index.html">Home</a>
       <input type="text" class="search-bar" placeholder="Search..." readonly onclick="openSearchModal()" />
     </div>
-  </div>
+  </header>
 
-  <div class="banner" id="banner">
+  <section class="banner" id="banner">
     <div class="banner-content">
       <h1 id="banner-title"></h1>
       <button class="banner-btn" onclick="playBanner()"><i class="fa-solid fa-play"></i> Watch Now</button>
     </div>
-  </div>
+  </section>
 
   <!-- CATEGORY FILTER TABS -->
-  <div class="filter-tabs">
+  <nav class="filter-tabs">
     <button class="tab-btn active" onclick="filterContent('all', this)">All</button>
     <button class="tab-btn" onclick="filterContent('movie', this)">Movies</button>
     <button class="tab-btn" onclick="filterContent('tv', this)">TV Shows</button>
     <button class="tab-btn" onclick="filterContent('anime', this)">Anime</button>
-  </div>
+  </nav>
 
   <!-- GENRE FILTER CHIPS -->
   <div class="genre-tabs" id="genre-container">
@@ -67,7 +67,7 @@
   <div class="row" id="movies-row">
     <div class="row-header">
       <h2>Trending Movies</h2>
-      <button class="see-all-btn" onclick="openGridModal('movies')">See All ></button>
+      <button class="see-all-btn" onclick="openGridModal('movies')">See All &gt;</button>
     </div>
     <div class="list" id="movies-list"></div>
   </div>
@@ -75,7 +75,7 @@
   <div class="row" id="tvshows-row">
     <div class="row-header">
       <h2>Trending TV Shows</h2>
-      <button class="see-all-btn" onclick="openGridModal('tv')">See All ></button>
+      <button class="see-all-btn" onclick="openGridModal('tv')">See All &gt;</button>
     </div>
     <div class="list" id="tvshows-list"></div>
   </div>
@@ -83,7 +83,7 @@
   <div class="row" id="anime-row">
     <div class="row-header">
       <h2>Trending Anime</h2>
-      <button class="see-all-btn" onclick="openGridModal('anime')">See All ></button>
+      <button class="see-all-btn" onclick="openGridModal('anime')">See All &gt;</button>
     </div>
     <div class="list" id="anime-list"></div>
   </div>
@@ -91,7 +91,7 @@
   <div class="row" id="tagalog-row">
     <div class="row-header">
       <h2>Trending Tagalog Movies</h2>
-      <button class="see-all-btn" onclick="openGridModal('tagalog')">See All ></button>
+      <button class="see-all-btn" onclick="openGridModal('tagalog')">See All &gt;</button>
     </div>
     <div class="list" id="tagalog-list"></div>
   </div>
@@ -99,14 +99,14 @@
   <div class="row" id="kdrama-row">
     <div class="row-header">
       <h2>Trending K-Dramas</h2>
-      <button class="see-all-btn" onclick="openGridModal('kdrama')">See All ></button>
+      <button class="see-all-btn" onclick="openGridModal('kdrama')">See All &gt;</button>
     </div>
     <div class="list" id="kdrama-list"></div>
   </div>
 
   <div class="modal" id="modal">
     <div class="modal-content">
-      <span class="close" onclick="closeModal()" style="color: red;">&times;</span>
+      <span class="close" onclick="closeModal()">&times;</span>
       <div class="modal-body">
         <img id="modal-image" src="" alt="" />
         <div class="modal-text">
@@ -115,12 +115,10 @@
           <button id="watchlist-btn" class="watchlist-btn" onclick="toggleWatchlist()">Add to List</button>
           <p id="modal-description"></p>
           
-          <!-- Series Season & Episode Selector -->
           <div id="series-options" class="series-options" style="display: none;">
             <select id="season-select" class="season-select" onchange="onSeasonChange()"></select>
             <div id="episodes-container" class="episodes-container"></div>
           </div>
-
         </div>
       </div>
       
@@ -134,20 +132,20 @@
   <div class="grid-modal" id="grid-modal">
     <div class="grid-modal-header">
       <h2 id="grid-modal-title">Category</h2>
-      <span class="close" onclick="closeGridModal()" style="position: relative; top: 0; right: 0; background: none; font-size: 32px;">&times;</span>
+      <span class="close" onclick="closeGridModal()">&times;</span>
     </div>
     <div class="grid-container" id="grid-modal-results"></div>
   </div>
 
   <div class="search-modal" id="search-modal">
-    <span class="close" onclick="closeSearchModal()" style="color: red;">&times;</span>
+    <span class="close" onclick="closeSearchModal()">&times;</span>
     <input type="text" id="search-input" placeholder="Search for a movie or show..." oninput="debounceSearch()" />
     <div class="results" id="search-results"></div>
   </div>
 
   <footer class="footer">
     <div class="footer-content">
-      <p>&copy; 2025 My Website. All rights reserved.</p>
+      <p>&copy; 2026 StreamVault. All rights reserved.</p>
       <div class="footer-links">
         <a href="#">Disclaimer</a>
         <a href="#">About Us</a>
@@ -155,6 +153,5 @@
       </div>
     </div>
   </footer>
-
 </body>
 </html>
