@@ -16,18 +16,7 @@ let fullDataCache = {
   kdrama: []
 };
 
-// Smart Cache Wrapper for API Requests (Expires in 1 hour)
-async function cachedFetch(endpoint, maxPages = 3) {
-  const cacheKey = `tmdb_cache_${endpoint}_pages_${maxPages}`;
-  const cachedData = localStorage.getItem(cacheKey);
-  const cachedTime = localStorage.getItem(`${cacheKey}_time`);
-  
-  const ONE_HOUR = 60 * 60 * 1000;
-  
-  if (cachedData && cachedTime && (Date.now() - parseInt(cachedTime) < ONE_HOUR)) {
-    return JSON.parse(cachedData);
-  }
-
+async function fetchMultiplePages(endpoint, maxPages = 3) {
   let allResults = [];
   try {
     for (let page = 1; page <= maxPages; page++) {
@@ -37,31 +26,19 @@ async function cachedFetch(endpoint, maxPages = 3) {
         allResults = allResults.concat(data.results);
       }
     }
-    localStorage.setItem(cacheKey, JSON.stringify(allResults));
-    localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
   } catch (error) {
     console.error("Error fetching multiple pages:", error);
-    if (cachedData) return JSON.parse(cachedData);
   }
   return allResults;
 }
 
 async function fetchTrending(type) {
-  return await cachedFetch(`/trending/${type}/week?`, 3);
+  return await fetchMultiplePages(`/trending/${type}/week?`, 3);
 }
 
 async function fetchTrendingAnime() {
   let allResults = [];
   try {
-    const cacheKey = `tmdb_cache_trending_anime`;
-    const cachedData = localStorage.getItem(cacheKey);
-    const cachedTime = localStorage.getItem(`${cacheKey}_time`);
-    const ONE_HOUR = 60 * 60 * 1000;
-
-    if (cachedData && cachedTime && (Date.now() - parseInt(cachedTime) < ONE_HOUR)) {
-      return JSON.parse(cachedData);
-    }
-
     for (let page = 1; page <= 5; page++) {
       const res = await fetch(`${BASE_URL}/trending/tv/week?api_key=${API_KEY}&page=${page}`);
       const data = await res.json();
@@ -72,8 +49,6 @@ async function fetchTrendingAnime() {
         allResults = allResults.concat(filtered);
       }
     }
-    localStorage.setItem(cacheKey, JSON.stringify(allResults));
-    localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
   } catch (error) {
     console.error("Error fetching anime:", error);
   }
@@ -81,15 +56,15 @@ async function fetchTrendingAnime() {
 }
 
 async function fetchTagalogContent() {
-  return await cachedFetch(`/discover/movie?with_original_language=tl&sort_by=popularity.desc`, 3);
+  return await fetchMultiplePages(`/discover/movie?with_original_language=tl&sort_by=popularity.desc`, 3);
 }
 
 async function fetchKDramas() {
-  return await cachedFetch(`/discover/tv?with_original_language=ko&sort_by=popularity.desc`, 3);
+  return await fetchMultiplePages(`/discover/tv?with_original_language=ko&sort_by=popularity.desc`, 3);
 }
 
 async function fetchByGenreId(genreId) {
-  return await cachedFetch(`/discover/movie?with_genres=${genreId}&sort_by=popularity.desc`, 3);
+  return await fetchMultiplePages(`/discover/movie?with_genres=${genreId}&sort_by=popularity.desc`, 3);
 }
 
 function displayBanner(item) {
@@ -119,10 +94,11 @@ function displayList(items, containerId, mediaType) {
   });
 }
 
-// Show Details with Progress Restoration
+// Upgraded Show Details with Progress Restoration
 async function showDetails(item) {
   currentItem = item;
   
+  // Check if item has saved progress in Continue Watching
   let continueList = getContinueWatching();
   let savedProgress = continueList.find(i => i.id === item.id);
   
@@ -135,7 +111,7 @@ async function showDetails(item) {
   document.getElementById('modal-rating').innerHTML = '★'.repeat(Math.round(item.vote_average / 2));
   
   updateWatchlistButton();
-  saveCurrentProgress();
+  saveCurrentProgress(); // Log/update progress initially
 
   const isTv = currentItem.media_type === "tv" || !currentItem.title;
   const seriesOptions = document.getElementById('series-options');
@@ -196,6 +172,7 @@ async function loadEpisodes(tvId, seasonNumber) {
     const data = await res.json();
 
     if (data.episodes && data.episodes.length > 0) {
+      // If we switched seasons manually, default to ep 1 unless target is already set
       if (!currentEpisode || currentSeason !== seasonNumber) {
         currentEpisode = data.episodes[0].episode_number;
       }
@@ -225,7 +202,6 @@ function onSeasonChange() {
   loadEpisodes(currentItem.id, parseInt(selectedSeason));
 }
 
-// Purely Videasy Player Loader
 function loadVideo() {
   const isTv = currentItem.media_type === "tv" || !currentItem.title;
   let embedURL = '';
@@ -245,7 +221,7 @@ function closeModal() {
   document.body.classList.remove('modal-open');
 }
 
-// Watchlist Logic & Toast Notifications
+// Watchlist Logic
 function getWatchlist() {
   return JSON.parse(localStorage.getItem('myList')) || [];
 }
@@ -259,14 +235,11 @@ function toggleWatchlist() {
   if (!currentItem) return;
   let list = getWatchlist();
   const index = list.findIndex(item => item.id === currentItem.id);
-  const title = currentItem.title || currentItem.name;
   
   if (index > -1) {
     list.splice(index, 1);
-    showToast(`Removed "${title}" from your list`);
   } else {
     list.push(currentItem);
-    showToast(`Added "${title}" to your list`);
   }
   
   localStorage.setItem('myList', JSON.stringify(list));
@@ -297,7 +270,7 @@ function renderWatchlistRow() {
   }
 }
 
-// Continue Watching Logic
+// Continue Watching State Management Logic
 function getContinueWatching() {
   return JSON.parse(localStorage.getItem('continueWatching')) || [];
 }
@@ -334,20 +307,6 @@ function renderContinueWatchingRow() {
     row.style.display = 'block';
     displayList(list, 'continue-list', 'movie');
   }
-}
-
-// Toast Notification System
-function showToast(message) {
-  const toast = document.getElementById('toast-container');
-  if (!toast) return;
-  
-  toast.textContent = message;
-  toast.classList.add('show');
-  
-  clearTimeout(toast.timeoutId);
-  toast.timeoutId = setTimeout(() => {
-    toast.classList.remove('show');
-  }, 2500);
 }
 
 // Category Tab Filtering
