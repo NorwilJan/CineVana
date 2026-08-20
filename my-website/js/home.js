@@ -5,41 +5,16 @@ const IMG_URL = 'https://image.tmdb.org/t/p/original';
 const PLACEHOLDER_IMG =
   'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="130" height="195" fill="%23222"><rect width="100%" height="100%"/></svg>';
 
-/*
- * IMPORTANT:
- * Put only video servers that you own, operate, or are licensed to use.
- *
- * The player will:
- * 1. Try the primary server.
- * 2. Wait 8 seconds.
- * 3. If it fails, automatically try the fallback.
- *
- * No server-selection UI is shown.
- */
+const VIVAMAX_COMPANY_ID = 149142;
 
-const VIDEO_SERVERS = [
-  {
-    name: 'Primary',
-    movie: id => `https://YOUR-PRIMARY-SERVER/movie/${id}`,
-    tv: (id, season, episode) =>
-      `https://YOUR-PRIMARY-SERVER/tv/${id}/${season}/${episode}`
-  },
-  {
-    name: 'Fallback',
-    movie: id => `https://YOUR-FALLBACK-SERVER/movie/${id}`,
-    tv: (id, season, episode) =>
-      `https://YOUR-FALLBACK-SERVER/tv/${id}/${season}/${episode}`
-  }
-];
+let currentItem = null;
+let bannerItem = null;
 
-let currentItem;
-let bannerItem;
 let currentSeason = 1;
 let currentEpisode = 1;
-let currentServerIndex = 0;
-let playerTimeout = null;
 
-let searchTimeout;
+let searchTimeout = null;
+
 let showDetailsCache = {};
 
 let fullDataCache = {
@@ -47,116 +22,53 @@ let fullDataCache = {
   tv: [],
   anime: [],
   tagalog: [],
-  kdrama: []
+  kdrama: [],
+  vivamax: []
 };
 
+/* SEE ALL STATE */
+let gridCategory = null;
+let gridPage = 1;
+let gridLoading = false;
+let gridHasMore = true;
+let gridScrollPosition = 0;
 
-/* =========================
-   VIDEO PLAYER / FAILOVER
-========================= */
-
-function getVideoURL(serverIndex = 0) {
-  if (!currentItem || !VIDEO_SERVERS[serverIndex]) return '';
-
-  const server = VIDEO_SERVERS[serverIndex];
-
-  const isTv =
-    currentItem.media_type === 'tv' ||
-    !currentItem.title;
-
-  if (isTv) {
-    return server.tv(
-      currentItem.id,
-      currentSeason,
-      currentEpisode
-    );
-  }
-
-  return server.movie(currentItem.id);
-}
-
-
-function startPlayer() {
-  clearTimeout(playerTimeout);
-
-  currentServerIndex = 0;
-
-  const iframe = document.getElementById('modal-video');
-
-  if (!iframe || !currentItem) return;
-
-  iframe.src = getVideoURL(currentServerIndex);
-
-  /*
-   * Give the primary player enough time to initialize.
-   * Slow connections should not immediately trigger fallback.
-   */
-  playerTimeout = setTimeout(() => {
-    switchToNextServer();
-  }, 8000);
-}
-
-
-function switchToNextServer() {
-  clearTimeout(playerTimeout);
-
-  const nextIndex = currentServerIndex + 1;
-
-  if (nextIndex >= VIDEO_SERVERS.length) {
-    console.warn('All available video servers failed.');
-    return;
-  }
-
-  currentServerIndex = nextIndex;
-
-  const iframe = document.getElementById('modal-video');
-
-  if (!iframe) return;
-
-  iframe.src = getVideoURL(currentServerIndex);
-
-  /*
-   * Give the fallback server another 8 seconds.
-   */
-  playerTimeout = setTimeout(() => {
-    switchToNextServer();
-  }, 8000);
-}
-
-
-/*
- * Manual player error handler.
- * Some iframe providers don't expose errors to the parent page,
- * so the timeout above remains the main fallback mechanism.
- */
-function handlePlayerError() {
-  switchToNextServer();
-}
+/* Used to restore See All after closing details */
+let openedFromGrid = false;
 
 
 /* =========================
-   FETCHING
+   FETCH MULTIPLE PAGES
 ========================= */
 
 async function fetchMultiplePages(endpoint, maxPages = 3) {
+
   let allResults = [];
 
   try {
+
     for (let page = 1; page <= maxPages; page++) {
 
-      const res = await fetch(
-        `${BASE_URL}${endpoint}&page=${page}&api_key=${API_KEY}`
-      );
+      const separator =
+        endpoint.includes('?') ? '&' : '?';
+
+      const url =
+        `${BASE_URL}${endpoint}${separator}page=${page}&api_key=${API_KEY}`;
+
+      const res = await fetch(url);
 
       if (!res.ok) continue;
 
       const data = await res.json();
 
       if (data.results) {
-        allResults = allResults.concat(data.results);
+        allResults =
+          allResults.concat(data.results);
       }
     }
+
   } catch (error) {
+
     console.error(
       'Error fetching multiple pages:',
       error
@@ -167,7 +79,12 @@ async function fetchMultiplePages(endpoint, maxPages = 3) {
 }
 
 
+/* =========================
+   TRENDING
+========================= */
+
 async function fetchTrending(type) {
+
   return await fetchMultiplePages(
     `/trending/${type}/week?`,
     3
@@ -175,10 +92,16 @@ async function fetchTrending(type) {
 }
 
 
+/* =========================
+   ANIME
+========================= */
+
 async function fetchTrendingAnime() {
+
   let allResults = [];
 
   try {
+
     for (let page = 1; page <= 5; page++) {
 
       const res = await fetch(
@@ -191,16 +114,20 @@ async function fetchTrendingAnime() {
 
       if (data.results) {
 
-        const filtered = data.results.filter(item =>
-          item.original_language === 'ja' &&
-          item.genre_ids &&
-          item.genre_ids.includes(16)
-        );
+        const filtered =
+          data.results.filter(item =>
+            item.original_language === 'ja' &&
+            item.genre_ids &&
+            item.genre_ids.includes(16)
+          );
 
-        allResults = allResults.concat(filtered);
+        allResults =
+          allResults.concat(filtered);
       }
     }
+
   } catch (error) {
+
     console.error(
       'Error fetching anime:',
       error
@@ -211,7 +138,12 @@ async function fetchTrendingAnime() {
 }
 
 
+/* =========================
+   TAGALOG
+========================= */
+
 async function fetchTagalogContent() {
+
   return await fetchMultiplePages(
     `/discover/movie?with_original_language=tl&sort_by=popularity.desc`,
     3
@@ -219,7 +151,12 @@ async function fetchTagalogContent() {
 }
 
 
+/* =========================
+   K-DRAMA
+========================= */
+
 async function fetchKDramas() {
+
   return await fetchMultiplePages(
     `/discover/tv?with_original_language=ko&sort_by=popularity.desc`,
     3
@@ -227,11 +164,64 @@ async function fetchKDramas() {
 }
 
 
+/* =========================
+   GENRE
+========================= */
+
 async function fetchByGenreId(genreId) {
+
   return await fetchMultiplePages(
     `/discover/movie?with_genres=${genreId}&sort_by=popularity.desc`,
     3
   );
+}
+
+
+/* =========================
+   VIVAMAX
+========================= */
+
+async function fetchVivamax(page = 1) {
+
+  try {
+
+    const url =
+      `${BASE_URL}/discover/movie` +
+      `?with_companies=${VIVAMAX_COMPANY_ID}` +
+      `&sort_by=vote_average.desc` +
+      `&vote_count.gte=5` +
+      `&include_adult=true` +
+      `&page=${page}` +
+      `&api_key=${API_KEY}`;
+
+    const res =
+      await fetch(url);
+
+    if (!res.ok) {
+      console.error(
+        'Vivamax request failed:',
+        res.status
+      );
+      return {
+        results: [],
+        total_pages: 0
+      };
+    }
+
+    return await res.json();
+
+  } catch (error) {
+
+    console.error(
+      'Error fetching Vivamax:',
+      error
+    );
+
+    return {
+      results: [],
+      total_pages: 0
+    };
+  }
 }
 
 
@@ -252,11 +242,13 @@ function displayBanner(item) {
     document.getElementById('banner-title');
 
   if (bannerEl) {
+
     bannerEl.style.backgroundImage =
-      `url(${IMG_URL}${item.backdrop_path})`;
+      `linear-gradient(to top, #111 10%, rgba(17,17,17,0.4) 60%, rgba(17,17,17,0.8)), url(${IMG_URL}${item.backdrop_path})`;
   }
 
   if (titleEl) {
+
     titleEl.textContent =
       item.title || item.name;
   }
@@ -272,7 +264,7 @@ function playBanner() {
 
 
 /* =========================
-   LIST DISPLAY
+   HORIZONTAL LIST
 ========================= */
 
 function displayList(
@@ -311,8 +303,10 @@ function displayList(
       img.src = PLACEHOLDER_IMG;
     };
 
-    img.onclick = () =>
+    img.onclick = () => {
+      openedFromGrid = false;
       showDetails(item);
+    };
 
     container.appendChild(img);
   });
@@ -320,7 +314,7 @@ function displayList(
 
 
 /* =========================
-   MOVIE / TV DETAILS
+   SHOW DETAILS
 ========================= */
 
 async function showDetails(item) {
@@ -345,37 +339,55 @@ async function showDetails(item) {
       ? (savedProgress.savedEpisode || 1)
       : 1;
 
-  document.getElementById(
-    'modal-title'
-  ).textContent =
-    item.title || item.name;
+  const title =
+    document.getElementById('modal-title');
 
-  document.getElementById(
-    'modal-description'
-  ).textContent =
-    item.overview ||
-    'No description available.';
+  const description =
+    document.getElementById('modal-description');
 
-  const imgEl =
+  const image =
     document.getElementById('modal-image');
 
-  imgEl.src =
-    `${IMG_URL}${item.poster_path}`;
+  const rating =
+    document.getElementById('modal-rating');
 
-  imgEl.onerror = () => {
-    imgEl.src = PLACEHOLDER_IMG;
-  };
+  if (title) {
 
-  document.getElementById(
-    'modal-rating'
-  ).innerHTML =
-    item.vote_average
-      ? '★'.repeat(
-          Math.round(item.vote_average / 2)
-        )
-      : '';
+    title.textContent =
+      item.title || item.name;
+  }
+
+  if (description) {
+
+    description.textContent =
+      item.overview ||
+      'No description available.';
+  }
+
+  if (image) {
+
+    image.src =
+      `${IMG_URL}${item.poster_path}`;
+
+    image.onerror = () => {
+      image.src = PLACEHOLDER_IMG;
+    };
+  }
+
+  if (rating) {
+
+    rating.innerHTML =
+      item.vote_average
+        ? '★'.repeat(
+            Math.round(
+              item.vote_average / 2
+            )
+          )
+        : '';
+  }
 
   updateWatchlistButton();
+
   saveCurrentProgress();
 
   const isTv =
@@ -389,7 +401,8 @@ async function showDetails(item) {
 
   if (isTv) {
 
-    seriesOptions.style.display = 'flex';
+    seriesOptions.style.display =
+      'flex';
 
     await loadTVSeasons(
       currentItem.id,
@@ -399,9 +412,10 @@ async function showDetails(item) {
 
   } else {
 
-    seriesOptions.style.display = 'none';
+    seriesOptions.style.display =
+      'none';
 
-    startPlayer();
+    loadVideo();
   }
 
   document.getElementById(
@@ -411,6 +425,40 @@ async function showDetails(item) {
   document.body.classList.add(
     'modal-open'
   );
+}
+
+
+/* =========================
+   VIDEO
+========================= */
+
+function loadVideo() {
+
+  if (!currentItem) return;
+
+  const isTv =
+    currentItem.media_type === 'tv' ||
+    !currentItem.title;
+
+  let embedURL;
+
+  if (isTv) {
+
+    embedURL =
+      `https://player.videasy.net/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
+
+  } else {
+
+    embedURL =
+      `https://player.videasy.net/movie/${currentItem.id}`;
+  }
+
+  const iframe =
+    document.getElementById('modal-video');
+
+  if (iframe) {
+    iframe.src = embedURL;
+  }
 }
 
 
@@ -480,6 +528,7 @@ async function loadTVSeasons(
               season.season_number ===
               targetSeason
             ) {
+
               option.selected = true;
             }
 
@@ -521,7 +570,7 @@ async function loadEpisodes(
   seasonNumber
 ) {
 
-  const previousSeason =
+  const oldSeason =
     currentSeason;
 
   currentSeason =
@@ -553,12 +602,8 @@ async function loadEpisodes(
       data.episodes.length > 0
     ) {
 
-      /*
-       * When changing season,
-       * automatically select Episode 1.
-       */
       if (
-        previousSeason !== seasonNumber ||
+        oldSeason !== seasonNumber ||
         !currentEpisode
       ) {
 
@@ -606,7 +651,7 @@ async function loadEpisodes(
             currentEpisode =
               ep.episode_number;
 
-            startPlayer();
+            loadVideo();
 
             saveCurrentProgress();
           };
@@ -618,7 +663,7 @@ async function loadEpisodes(
       );
     }
 
-    startPlayer();
+    loadVideo();
 
   } catch (error) {
 
@@ -647,12 +692,10 @@ function onSeasonChange() {
 
 
 /* =========================
-   CLOSE MODAL
+   CLOSE MOVIE MODAL
 ========================= */
 
 function closeModal() {
-
-  clearTimeout(playerTimeout);
 
   const iframe =
     document.getElementById(
@@ -670,6 +713,44 @@ function closeModal() {
   document.body.classList.remove(
     'modal-open'
   );
+
+  /*
+   * If movie was opened from See All,
+   * restore the See All screen and
+   * exactly where the user was.
+   */
+  if (openedFromGrid) {
+
+    const gridModal =
+      document.getElementById(
+        'grid-modal'
+      );
+
+    if (gridModal) {
+
+      gridModal.classList.add(
+        'active'
+      );
+
+      document.body.classList.add(
+        'modal-open'
+      );
+
+      const scrollArea =
+        document.getElementById(
+          'grid-scroll-area'
+        );
+
+      if (scrollArea) {
+
+        requestAnimationFrame(() => {
+
+          scrollArea.scrollTop =
+            gridScrollPosition;
+        });
+      }
+    }
+  }
 }
 
 
@@ -690,7 +771,9 @@ function getWatchlist() {
 function isItemInWatchlist(id) {
 
   return getWatchlist()
-    .some(item => item.id === id);
+    .some(
+      item => item.id === id
+    );
 }
 
 
@@ -722,6 +805,7 @@ function toggleWatchlist() {
   );
 
   updateWatchlistButton();
+
   renderWatchlistRow();
 }
 
@@ -809,7 +893,7 @@ function saveCurrentProgress() {
   let list =
     getContinueWatching();
 
-  let existingIndex =
+  const existingIndex =
     list.findIndex(
       i =>
         i.id === currentItem.id
@@ -830,6 +914,7 @@ function saveCurrentProgress() {
   };
 
   if (existingIndex > -1) {
+
     list.splice(
       existingIndex,
       1
@@ -940,6 +1025,11 @@ function filterContent(
     kdrama:
       document.getElementById(
         'kdrama-row'
+      ),
+
+    vivamax:
+      document.getElementById(
+        'vivamax-row'
       )
   };
 
@@ -951,6 +1041,7 @@ function filterContent(
 
   Object.values(rows).forEach(
     r => {
+
       if (r)
         r.style.display =
           'none';
@@ -993,6 +1084,10 @@ function filterContent(
       rows.kdrama.style.display =
         'block';
 
+    if (rows.vivamax)
+      rows.vivamax.style.display =
+        'block';
+
   } else if (category === 'movie') {
 
     if (rows.movies)
@@ -1001,6 +1096,10 @@ function filterContent(
 
     if (rows.tagalog)
       rows.tagalog.style.display =
+        'block';
+
+    if (rows.vivamax)
+      rows.vivamax.style.display =
         'block';
 
   } else if (category === 'tv') {
@@ -1064,7 +1163,8 @@ async function filterByGenre(
     'tvshows-row',
     'anime-row',
     'tagalog-row',
-    'kdrama-row'
+    'kdrama-row',
+    'vivamax-row'
   ].forEach(id => {
 
     const el =
@@ -1100,7 +1200,7 @@ async function filterByGenre(
 
 
 /* =========================
-   GRID MODAL
+   SEE ALL
 ========================= */
 
 function openGridModal(category) {
@@ -1115,12 +1215,30 @@ function openGridModal(category) {
       'grid-modal-title'
     );
 
+  const scrollArea =
+    document.getElementById(
+      'grid-scroll-area'
+    );
+
   const container =
     document.getElementById(
       'grid-modal-results'
     );
 
-  container.innerHTML = '';
+  gridCategory =
+    category;
+
+  gridPage = 1;
+
+  gridLoading = false;
+
+  gridHasMore = true;
+
+  openedFromGrid = true;
+
+  if (scrollArea) {
+    scrollArea.scrollTop = 0;
+  }
 
   const titles = {
 
@@ -1137,7 +1255,10 @@ function openGridModal(category) {
       'Trending Tagalog Movies',
 
     kdrama:
-      'Trending K-Dramas'
+      'Trending K-Dramas',
+
+    vivamax:
+      'Top Rated Vivamax'
   };
 
   if (titleEl) {
@@ -1147,44 +1268,7 @@ function openGridModal(category) {
       'Category';
   }
 
-  (
-    fullDataCache[category] ||
-    []
-  ).forEach(item => {
-
-    if (!item.poster_path)
-      return;
-
-    const img =
-      document.createElement(
-        'img'
-      );
-
-    img.src =
-      `${IMG_URL}${item.poster_path}`;
-
-    img.alt =
-      item.title ||
-      item.name;
-
-    img.loading = 'lazy';
-
-    img.onerror = () => {
-      img.src =
-        PLACEHOLDER_IMG;
-    };
-
-    img.onclick = () => {
-
-      closeGridModal();
-
-      showDetails(item);
-    };
-
-    container.appendChild(
-      img
-    );
-  });
+  container.innerHTML = '';
 
   modal.classList.add(
     'active'
@@ -1193,6 +1277,314 @@ function openGridModal(category) {
   document.body.classList.add(
     'modal-open'
   );
+
+  loadGridPage();
+}
+
+
+async function loadGridPage() {
+
+  if (
+    gridLoading ||
+    !gridHasMore ||
+    !gridCategory
+  ) {
+    return;
+  }
+
+  gridLoading = true;
+
+  const container =
+    document.getElementById(
+      'grid-modal-results'
+    );
+
+  const loading =
+    document.createElement(
+      'div'
+    );
+
+  loading.className =
+    'grid-loading';
+
+  loading.textContent =
+    'Loading...';
+
+  container.appendChild(
+    loading
+  );
+
+  try {
+
+    let data;
+
+    if (
+      gridCategory ===
+      'vivamax'
+    ) {
+
+      data =
+        await fetchVivamax(
+          gridPage
+        );
+
+    } else {
+
+      let endpoint;
+
+      switch (
+        gridCategory
+      ) {
+
+        case 'movies':
+
+          endpoint =
+            `/trending/movie/week?`;
+          break;
+
+        case 'tv':
+
+          endpoint =
+            `/trending/tv/week?`;
+          break;
+
+        case 'anime':
+
+          endpoint =
+            `/trending/tv/week?`;
+          break;
+
+        case 'tagalog':
+
+          endpoint =
+            `/discover/movie?with_original_language=tl&sort_by=popularity.desc`;
+          break;
+
+        case 'kdrama':
+
+          endpoint =
+            `/discover/tv?with_original_language=ko&sort_by=popularity.desc`;
+          break;
+
+        default:
+
+          endpoint = '';
+      }
+
+      const separator =
+        endpoint.includes('?')
+          ? '&'
+          : '?';
+
+      const res =
+        await fetch(
+          `${BASE_URL}${endpoint}${separator}page=${gridPage}&api_key=${API_KEY}`
+        );
+
+      if (!res.ok) {
+        throw new Error(
+          `HTTP ${res.status}`
+        );
+      }
+
+      data =
+        await res.json();
+    }
+
+    loading.remove();
+
+    const results =
+      data.results || [];
+
+    if (
+      results.length === 0
+    ) {
+
+      gridHasMore = false;
+
+      showGridEnd();
+
+      return;
+    }
+
+    results.forEach(
+      item => {
+
+        if (
+          !item.poster_path
+        )
+          return;
+
+        if (
+          gridCategory ===
+          'anime'
+        ) {
+          item.media_type =
+            'tv';
+        }
+
+        if (
+          gridCategory ===
+            'movies' ||
+          gridCategory ===
+            'tagalog' ||
+          gridCategory ===
+            'vivamax'
+        ) {
+          item.media_type =
+            'movie';
+        }
+
+        if (
+          gridCategory ===
+          'tv' ||
+          gridCategory ===
+          'kdrama'
+        ) {
+          item.media_type =
+            'tv';
+        }
+
+        const img =
+          document.createElement(
+            'img'
+          );
+
+        img.src =
+          `${IMG_URL}${item.poster_path}`;
+
+        img.alt =
+          item.title ||
+          item.name;
+
+        img.loading = 'lazy';
+
+        img.onerror = () => {
+          img.src =
+            PLACEHOLDER_IMG;
+        };
+
+        img.onclick = () => {
+
+          const scrollArea =
+            document.getElementById(
+              'grid-scroll-area'
+            );
+
+          if (scrollArea) {
+
+            gridScrollPosition =
+              scrollArea.scrollTop;
+          }
+
+          document
+            .getElementById(
+              'grid-modal'
+            )
+            .classList.remove(
+              'active'
+            );
+
+          openedFromGrid = true;
+
+          showDetails(item);
+        };
+
+        container.appendChild(
+          img
+        );
+      }
+    );
+
+    const totalPages =
+      data.total_pages || 1;
+
+    if (
+      gridPage >= totalPages
+    ) {
+
+      gridHasMore = false;
+
+      showGridEnd();
+
+    } else {
+
+      gridPage++;
+    }
+
+  } catch (error) {
+
+    console.error(
+      'Grid loading error:',
+      error
+    );
+
+    loading.remove();
+
+  } finally {
+
+    gridLoading = false;
+  }
+}
+
+
+function showGridEnd() {
+
+  const container =
+    document.getElementById(
+      'grid-modal-results'
+    );
+
+  if (!container) return;
+
+  if (
+    container.querySelector(
+      '.grid-end'
+    )
+  ) {
+    return;
+  }
+
+  const end =
+    document.createElement(
+      'div'
+    );
+
+  end.className =
+    'grid-end';
+
+  end.textContent =
+    'You have reached the end.';
+
+  container.appendChild(
+    end
+  );
+}
+
+
+function handleGridScroll() {
+
+  const scrollArea =
+    document.getElementById(
+      'grid-scroll-area'
+    );
+
+  if (!scrollArea) return;
+
+  const distanceFromBottom =
+    scrollArea.scrollHeight -
+    scrollArea.scrollTop -
+    scrollArea.clientHeight;
+
+  if (
+    distanceFromBottom <
+      600 &&
+    !gridLoading &&
+    gridHasMore
+  ) {
+
+    loadGridPage();
+  }
 }
 
 
@@ -1207,6 +1599,8 @@ function closeGridModal() {
   document.body.classList.remove(
     'modal-open'
   );
+
+  openedFromGrid = false;
 }
 
 
@@ -1222,6 +1616,10 @@ function openSearchModal() {
     'active'
   );
 
+  document.body.classList.add(
+    'modal-open'
+  );
+
   document.getElementById(
     'search-input'
   ).focus();
@@ -1234,6 +1632,10 @@ function closeSearchModal() {
     'search-modal'
   ).classList.remove(
     'active'
+  );
+
+  document.body.classList.remove(
+    'modal-open'
   );
 
   document.getElementById(
@@ -1279,66 +1681,79 @@ async function searchTMDB() {
     return;
   }
 
-  const res =
-    await fetch(
-      `${BASE_URL}/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(query)}`
+  try {
+
+    const res =
+      await fetch(
+        `${BASE_URL}/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(query)}`
+      );
+
+    if (!res.ok) return;
+
+    const data =
+      await res.json();
+
+    container.innerHTML = '';
+
+    data.results.forEach(
+      item => {
+
+        if (
+          !item.poster_path ||
+          item.media_type === 'person'
+        ) {
+          return;
+        }
+
+        if (!item.media_type) {
+
+          item.media_type =
+            item.title
+              ? 'movie'
+              : 'tv';
+        }
+
+        const img =
+          document.createElement(
+            'img'
+          );
+
+        img.src =
+          `${IMG_URL}${item.poster_path}`;
+
+        img.alt =
+          item.title ||
+          item.name;
+
+        img.loading = 'lazy';
+
+        img.onerror = () => {
+          img.src =
+            PLACEHOLDER_IMG;
+        };
+
+        img.onclick = () => {
+
+          closeSearchModal();
+
+          openedFromGrid = false;
+
+          showDetails(item);
+        };
+
+        container.appendChild(
+          img
+        );
+      }
     );
 
-  if (!res.ok) return;
+  } catch (error) {
 
-  const data =
-    await res.json();
-
-  container.innerHTML = '';
-
-  data.results.forEach(
-    item => {
-
-      if (
-        !item.poster_path ||
-        item.media_type === 'person'
-      )
-        return;
-
-      if (!item.media_type) {
-
-        item.media_type =
-          item.title
-            ? 'movie'
-            : 'tv';
-      }
-
-      const img =
-        document.createElement(
-          'img'
-        );
-
-      img.src =
-        `${IMG_URL}${item.poster_path}`;
-
-      img.alt =
-        item.title ||
-        item.name;
-
-      img.loading = 'lazy';
-
-      img.onerror = () => {
-        img.src =
-          PLACEHOLDER_IMG;
-      };
-
-      img.onclick = () => {
-
-        closeSearchModal();
-
-        showDetails(item);
-      };
-
-      container.appendChild(
-        img
-      );
-    }
-  );
+    console.error(
+      'Search error:',
+      error
+    );
+  }
 }
 
 
@@ -1348,97 +1763,153 @@ async function searchTMDB() {
 
 async function init() {
 
-  const [
-    movies,
-    tvShows,
-    anime,
-    tagalogMovies,
-    kDramas
-  ] = await Promise.all([
+  try {
 
-    fetchTrending('movie'),
-
-    fetchTrending('tv'),
-
-    fetchTrendingAnime(),
-
-    fetchTagalogContent(),
-
-    fetchKDramas()
-  ]);
-
-  fullDataCache = {
-
-    movies,
-
-    tv: tvShows,
-
-    anime,
-
-    tagalog:
+    const [
+      movies,
+      tvShows,
+      anime,
       tagalogMovies,
+      kDramas,
+      vivamaxData
+    ] = await Promise.all([
 
-    kdrama:
-      kDramas
-  };
+      fetchTrending('movie'),
 
-  if (movies.length > 0) {
+      fetchTrending('tv'),
 
-    displayBanner(
-      movies[
-        Math.floor(
-          Math.random() *
-          movies.length
-        )
-      ]
+      fetchTrendingAnime(),
+
+      fetchTagalogContent(),
+
+      fetchKDramas(),
+
+      fetchVivamax(1)
+    ]);
+
+    const vivamax =
+      vivamaxData.results || [];
+
+    fullDataCache = {
+
+      movies,
+
+      tv: tvShows,
+
+      anime,
+
+      tagalog:
+        tagalogMovies,
+
+      kdrama:
+        kDramas,
+
+      vivamax
+    };
+
+    /* Banner */
+
+    if (
+      movies.length > 0
+    ) {
+
+      displayBanner(
+        movies[
+          Math.floor(
+            Math.random() *
+            movies.length
+          )
+        ]
+      );
+    }
+
+    /* Titles */
+
+    const movieRowH2 =
+      document.querySelector(
+        '#movies-row h2'
+      );
+
+    if (movieRowH2) {
+
+      movieRowH2.textContent =
+        'Trending Movies';
+    }
+
+    /* Lists */
+
+    displayList(
+      movies,
+      'movies-list',
+      'movie'
+    );
+
+    displayList(
+      tvShows,
+      'tvshows-list',
+      'tv'
+    );
+
+    displayList(
+      anime,
+      'anime-list',
+      'tv'
+    );
+
+    displayList(
+      tagalogMovies,
+      'tagalog-list',
+      'movie'
+    );
+
+    displayList(
+      kDramas,
+      'kdrama-list',
+      'tv'
+    );
+
+    displayList(
+      vivamax,
+      'vivamax-list',
+      'movie'
+    );
+
+    renderWatchlistRow();
+
+    renderContinueWatchingRow();
+
+  } catch (error) {
+
+    console.error(
+      'Initialization error:',
+      error
     );
   }
-
-  const movieRowH2 =
-    document.querySelector(
-      '#movies-row h2'
-    );
-
-  if (movieRowH2) {
-
-    movieRowH2.textContent =
-      'Trending Movies';
-  }
-
-  displayList(
-    movies,
-    'movies-list',
-    'movie'
-  );
-
-  displayList(
-    tvShows,
-    'tvshows-list',
-    'tv'
-  );
-
-  displayList(
-    anime,
-    'anime-list',
-    'tv'
-  );
-
-  displayList(
-    tagalogMovies,
-    'tagalog-list',
-    'movie'
-  );
-
-  displayList(
-    kDramas,
-    'kdrama-list',
-    'tv'
-  );
-
-  renderWatchlistRow();
-
-  renderContinueWatchingRow();
 }
+
+
+/* =========================
+   GRID SCROLL LISTENER
+========================= */
+
+document.addEventListener(
+  'DOMContentLoaded',
+  () => {
+
+    const scrollArea =
+      document.getElementById(
+        'grid-scroll-area'
+      );
+
+    if (scrollArea) {
+
+      scrollArea.addEventListener(
+        'scroll',
+        handleGridScroll
+      );
+    }
+  }
+);
 
 
 init();
