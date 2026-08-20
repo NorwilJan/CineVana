@@ -225,6 +225,7 @@ function onSeasonChange() {
   loadEpisodes(currentItem.id, parseInt(selectedSeason));
 }
 
+// Purely Videasy Player Loader
 function loadVideo() {
   const isTv = currentItem.media_type === "tv" || !currentItem.title;
   let embedURL = '';
