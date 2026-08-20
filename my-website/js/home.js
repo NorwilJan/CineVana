@@ -6,7 +6,6 @@ let currentItem;
 let bannerItem;
 let currentSeason = 1;
 let currentEpisode = 1;
-let currentServer = 'videasy';
 let searchTimeout;
 let showDetailsCache = {};
 let fullDataCache = {
@@ -230,37 +229,13 @@ function loadVideo() {
   const isTv = currentItem.media_type === "tv" || !currentItem.title;
   let embedURL = '';
 
-  if (currentServer === 'videasy') {
-    if (isTv) {
-      embedURL = `https://player.videasy.net/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
-    } else {
-      embedURL = `https://player.videasy.net/movie/${currentItem.id}`;
-    }
-  } else if (currentServer === 'vidsrc') {
-    // Switched to vidsrc.to for a separate backup player provider
-    if (isTv) {
-      embedURL = `https://vidsrc.to/embed/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
-    } else {
-      embedURL = `https://vidsrc.to/embed/movie/${currentItem.id}`;
-    }
+  if (isTv) {
+    embedURL = `https://player.videasy.net/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
+  } else {
+    embedURL = `https://player.videasy.net/movie/${currentItem.id}`;
   }
 
   document.getElementById('modal-video').src = embedURL;
-}
-
-function switchServer(serverName, eventElement) {
-  currentServer = serverName;
-  
-  document.querySelectorAll('.server-btn').forEach(btn => {
-    btn.style.background = '#222';
-    btn.style.color = '#aaa';
-    btn.style.borderColor = '#444';
-  });
-  eventElement.style.background = '#e50914';
-  eventElement.style.color = '#fff';
-  eventElement.style.borderColor = '#e50914';
-
-  loadVideo();
 }
 
 function closeModal() {
