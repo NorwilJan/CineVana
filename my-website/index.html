@@ -351,7 +351,7 @@
 
 
   <!-- =========================
-       TAGALOG
+       TAGALOG MOVIES
   ========================== -->
 
   <div
@@ -377,6 +377,39 @@
     <div
       class="list"
       id="tagalog-list"
+    ></div>
+
+  </div>
+
+
+  <!-- =========================
+       TAGALOG TV SHOWS
+       NEW
+  ========================== -->
+
+  <div
+    class="row"
+    id="tagalog-tv-row"
+  >
+
+    <div class="row-header">
+
+      <h2>
+        Trending Tagalog TV Shows
+      </h2>
+
+      <button
+        class="see-all-btn"
+        onclick="openGridModal('tagalogTV')"
+      >
+        See All &gt;
+      </button>
+
+    </div>
+
+    <div
+      class="list"
+      id="tagalog-tv-list"
     ></div>
 
   </div>
@@ -495,7 +528,6 @@
             id="modal-description"
           ></p>
 
-
           <!-- TV OPTIONS -->
 
           <div
@@ -547,8 +579,6 @@
     id="grid-modal"
   >
 
-    <!-- FIXED HEADER -->
-
     <div class="grid-modal-header">
 
       <h2
@@ -567,8 +597,6 @@
     </div>
 
 
-    <!-- ONLY THIS AREA SCROLLS -->
-
     <div
       class="grid-scroll-area"
       id="grid-scroll-area"
@@ -579,20 +607,12 @@
         id="grid-modal-results"
       ></div>
 
-
-      <!-- LOADING -->
-
       <div
         class="grid-loading"
         id="grid-loading"
       >
-
         Loading more...
-
       </div>
-
-
-      <!-- END -->
 
       <div
         class="grid-end"
