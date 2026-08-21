@@ -2,9 +2,7 @@ const API_KEY = 'c5f2e226dd2ee0c8ed2c272a0ebaf049';
 const BASE_URL = 'https://api.themoviedb.org/3';
 
 /*
- * PERFORMANCE:
- * Use appropriately sized TMDB images for posters.
- * The original-size image is only used for the hero banner.
+ * PERFORMANCE
  */
 const POSTER_URL = 'https://image.tmdb.org/t/p/w342';
 const MODAL_POSTER_URL = 'https://image.tmdb.org/t/p/w500';
@@ -27,20 +25,27 @@ const showDetailsCache = {};
 const episodeCache = {};
 
 /*
+ * =========================
  * DATA CACHE
+ * =========================
  */
+
 let fullDataCache = {
   movies: [],
   tv: [],
   anime: [],
   tagalog: [],
+  tagalogTV: [],
   kdrama: [],
   vivamax: []
 };
 
 /*
+ * =========================
  * SEE ALL STATE
+ * =========================
  */
+
 let gridCategory = null;
 let gridPage = 1;
 let gridLoading = false;
@@ -61,7 +66,9 @@ const gridPageCache = {};
 
 function getPosterUrl(path, size = 'normal') {
 
-  if (!path) return PLACEHOLDER_IMG;
+  if (!path) {
+    return PLACEHOLDER_IMG;
+  }
 
   if (size === 'modal') {
     return `${MODAL_POSTER_URL}${path}`;
@@ -70,9 +77,12 @@ function getPosterUrl(path, size = 'normal') {
   return `${POSTER_URL}${path}`;
 }
 
+
 function getBackdropUrl(path) {
 
-  if (!path) return '';
+  if (!path) {
+    return '';
+  }
 
   return `${BACKDROP_URL}${path}`;
 }
@@ -88,9 +98,10 @@ async function tmdbFetch(endpoint, params = {}) {
 
   try {
 
-    const url = new URL(
-      `${BASE_URL}${endpoint}`
-    );
+    const url =
+      new URL(
+        `${BASE_URL}${endpoint}`
+      );
 
     url.searchParams.set(
       'api_key',
@@ -145,16 +156,13 @@ async function tmdbFetch(endpoint, params = {}) {
 /*
  * =========================
  * FETCH MULTIPLE PAGES
- *
- * Used only for homepage data.
- * Reduced from 3-5 pages to 1-2
- * initial pages to reduce startup load.
  * =========================
  */
 
 async function fetchMultiplePages(
   endpoint,
-  maxPages = 1
+  maxPages = 1,
+  params = {}
 ) {
 
   const allResults = [];
@@ -168,7 +176,10 @@ async function fetchMultiplePages(
     const data =
       await tmdbFetch(
         endpoint,
-        { page }
+        {
+          ...params,
+          page
+        }
       );
 
     if (
@@ -204,6 +215,9 @@ async function fetchTrending(type) {
 /*
  * =========================
  * ANIME
+ *
+ * Proper anime discovery:
+ * Japanese + Animation
  * =========================
  */
 
@@ -211,54 +225,37 @@ async function fetchTrendingAnime() {
 
   const data =
     await tmdbFetch(
-      '/trending/tv/week',
-      { page: 1 }
+      '/discover/tv',
+      {
+        with_original_language: 'ja',
+        with_genres: 16,
+        sort_by: 'popularity.desc',
+        page: 1
+      }
     );
 
   if (
-    !data ||
-    !Array.isArray(data.results)
+    data &&
+    Array.isArray(data.results)
   ) {
 
-    return [];
+    data.results.forEach(
+      item => {
+        item.media_type = 'tv';
+      }
+    );
+
+    return data.results;
   }
 
-  return data.results.filter(
-    item =>
-      item.original_language === 'ja' &&
-      item.genre_ids &&
-      item.genre_ids.includes(16)
-  );
+  return [];
 }
 
 
 /*
  * =========================
- * TAGALOG
+ * TAGALOG MOVIES
  * =========================
- */
-
-async function fetchTagalogContent() {
-
-  return await fetchMultiplePages(
-    '/discover/movie',
-    1
-  ).then(results => {
-
-    /*
-     * The actual filtered request
-     * is handled below because the
-     * generic helper would otherwise
-     * lose the filter parameters.
-     */
-
-    return results;
-  }).catch(() => []);
-}
-
-
-/*
- * Better Tagalog fetch
  */
 
 async function fetchTagalog() {
@@ -282,6 +279,44 @@ async function fetchTagalog() {
 
 /*
  * =========================
+ * TAGALOG TV SHOWS
+ *
+ * NEW
+ * =========================
+ */
+
+async function fetchTagalogTV() {
+
+  const data =
+    await tmdbFetch(
+      '/discover/tv',
+      {
+        with_original_language: 'tl',
+        sort_by: 'popularity.desc',
+        page: 1
+      }
+    );
+
+  if (
+    data &&
+    Array.isArray(data.results)
+  ) {
+
+    data.results.forEach(
+      item => {
+        item.media_type = 'tv';
+      }
+    );
+
+    return data.results;
+  }
+
+  return [];
+}
+
+
+/*
+ * =========================
  * K-DRAMA
  * =========================
  */
@@ -298,10 +333,21 @@ async function fetchKDramas() {
       }
     );
 
-  return data &&
+  if (
+    data &&
     Array.isArray(data.results)
-      ? data.results
-      : [];
+  ) {
+
+    data.results.forEach(
+      item => {
+        item.media_type = 'tv';
+      }
+    );
+
+    return data.results;
+  }
+
+  return [];
 }
 
 
@@ -381,8 +427,9 @@ async function fetchVivamax(
       total_pages: 0
     };
 
-  gridPageCache[cacheKey] =
-    result;
+  gridPageCache[
+    cacheKey
+  ] = result;
 
   return result;
 }
@@ -462,21 +509,21 @@ function displayList(
       containerId
     );
 
-  if (!container) return;
+  if (!container) {
+    return;
+  }
 
   container.innerHTML = '';
 
-  /*
-   * Keep homepage rows lightweight.
-   */
   const limitedItems =
     items.slice(0, 20);
 
   limitedItems.forEach(
     item => {
 
-      if (!item.poster_path)
+      if (!item.poster_path) {
         return;
+      }
 
       if (!item.media_type) {
 
@@ -652,10 +699,6 @@ async function showDetails(item) {
         : 'none';
   }
 
-  /*
-   * Open the information modal
-   * BEFORE loading the player.
-   */
   const modal =
     document.getElementById(
       'modal'
@@ -672,10 +715,6 @@ async function showDetails(item) {
     );
   }
 
-  /*
-   * Load TV information only when
-   * the user actually opens it.
-   */
   if (isTv) {
 
     await loadTVSeasons(
@@ -686,13 +725,8 @@ async function showDetails(item) {
 
   } else {
 
-    /*
-     * Slight delay allows the modal
-     * to render before iframe loading.
-     */
     requestAnimationFrame(
       () => {
-
         loadVideo();
       }
     );
@@ -708,16 +742,18 @@ async function showDetails(item) {
 
 function loadVideo() {
 
-  if (!currentItem)
+  if (!currentItem) {
     return;
+  }
 
   const iframe =
     document.getElementById(
       'modal-video'
     );
 
-  if (!iframe)
+  if (!iframe) {
     return;
+  }
 
   const isTv =
     currentItem.media_type === 'tv' ||
@@ -736,9 +772,6 @@ function loadVideo() {
       `https://player.videasy.net/movie/${currentItem.id}`;
   }
 
-  /*
-   * Don't reload the same URL.
-   */
   if (
     iframe.src === embedURL
   ) {
@@ -768,8 +801,9 @@ async function loadTVSeasons(
       'season-select'
     );
 
-  if (!seasonSelect)
+  if (!seasonSelect) {
     return;
+  }
 
   seasonSelect.innerHTML =
     '';
@@ -882,8 +916,9 @@ async function loadEpisodes(
       'episodes-container'
     );
 
-  if (!episodesContainer)
+  if (!episodesContainer) {
     return;
+  }
 
   episodesContainer.innerHTML =
     '';
@@ -981,10 +1016,6 @@ async function loadEpisodes(
       );
     }
 
-    /*
-     * Load the actual player only
-     * after episode information is ready.
-     */
     loadVideo();
 
   } catch (error) {
@@ -1004,8 +1035,9 @@ function onSeasonChange() {
       'season-select'
     );
 
-  if (!select)
+  if (!select) {
     return;
+  }
 
   currentEpisode =
     1;
@@ -1033,12 +1065,6 @@ function closeModal() {
       'modal-video'
     );
 
-  /*
-   * IMPORTANT:
-   * Completely unload Videasy.
-   * This stops the iframe from
-   * continuing to consume resources.
-   */
   if (iframe) {
 
     iframe.src =
@@ -1061,9 +1087,6 @@ function closeModal() {
     'modal-open'
   );
 
-  /*
-   * Return to See All.
-   */
   if (openedFromGrid) {
 
     const gridModal =
@@ -1134,8 +1157,9 @@ function isItemInWatchlist(id) {
 
 function toggleWatchlist() {
 
-  if (!currentItem)
+  if (!currentItem) {
     return;
+  }
 
   const list =
     getWatchlist();
@@ -1179,8 +1203,9 @@ function updateWatchlistButton() {
       'watchlist-btn'
     );
 
-  if (!btn || !currentItem)
+  if (!btn || !currentItem) {
     return;
+  }
 
   if (
     isItemInWatchlist(
@@ -1217,8 +1242,9 @@ function renderWatchlistRow() {
       'watchlist-row'
     );
 
-  if (!row)
+  if (!row) {
     return;
+  }
 
   row.style.display =
     list.length
@@ -1261,8 +1287,9 @@ function getContinueWatching() {
 
 function saveCurrentProgress() {
 
-  if (!currentItem)
+  if (!currentItem) {
     return;
+  }
 
   let list =
     getContinueWatching();
@@ -1328,8 +1355,9 @@ function renderContinueWatchingRow() {
       'continue-row'
     );
 
-  if (!row)
+  if (!row) {
     return;
+  }
 
   row.style.display =
     list.length
@@ -1408,6 +1436,11 @@ function filterContent(
         'tagalog-row'
       ),
 
+    tagalogTV:
+      document.getElementById(
+        'tagalog-tv-row'
+      ),
+
     kdrama:
       document.getElementById(
         'kdrama-row'
@@ -1430,7 +1463,6 @@ function filterContent(
       row => {
 
         if (row) {
-
           row.style.display =
             'none';
         }
@@ -1462,6 +1494,7 @@ function filterContent(
       'tv',
       'anime',
       'tagalog',
+      'tagalogTV',
       'kdrama',
       'vivamax'
     ].forEach(
@@ -1500,6 +1533,7 @@ function filterContent(
 
     [
       'tv',
+      'tagalogTV',
       'kdrama'
     ].forEach(
       key => {
@@ -1558,10 +1592,6 @@ async function filterByGenre(
     genreId === 'all'
   ) {
 
-    /*
-     * Don't reload the entire
-     * homepage unnecessarily.
-     */
     restoreAllRows();
 
     return;
@@ -1579,6 +1609,7 @@ async function filterByGenre(
     'tvshows-row',
     'anime-row',
     'tagalog-row',
+    'tagalog-tv-row',
     'kdrama-row',
     'vivamax-row'
   ].forEach(
@@ -1638,6 +1669,7 @@ function restoreAllRows() {
     'tvshows-row',
     'anime-row',
     'tagalog-row',
+    'tagalog-tv-row',
     'kdrama-row',
     'vivamax-row'
   ];
@@ -1668,10 +1700,6 @@ function restoreAllRows() {
  * =========================
  * SEE ALL SCROLL AREA
  * =========================
- *
- * Works with your existing
- * grid-modal even if
- * grid-scroll-area doesn't exist.
  */
 
 function getGridScrollArea() {
@@ -1681,8 +1709,9 @@ function getGridScrollArea() {
       'grid-scroll-area'
     );
 
-  if (custom)
+  if (custom) {
     return custom;
+  }
 
   return document.getElementById(
     'grid-modal'
@@ -1715,8 +1744,9 @@ function openGridModal(
       'grid-modal-results'
     );
 
-  if (!modal || !container)
+  if (!modal || !container) {
     return;
+  }
 
   gridCategory =
     category;
@@ -1758,6 +1788,9 @@ function openGridModal(
 
     tagalog:
       'Trending Tagalog Movies',
+
+    tagalogTV:
+      'Trending Tagalog TV Shows',
 
     kdrama:
       'Trending K-Dramas',
@@ -1815,114 +1848,178 @@ async function fetchGridPage(
 
   let data = null;
 
-  if (
-    category ===
-    'vivamax'
+  switch (
+    category
   ) {
 
-    data =
-      await fetchVivamax(
-        page
-      );
+    case 'movies':
 
-  } else {
+      data =
+        await tmdbFetch(
+          '/trending/movie/week',
+          { page }
+        );
 
-    switch (
-      category
-    ) {
+      break;
 
-      case 'movies':
 
-        data =
-          await tmdbFetch(
-            '/trending/movie/week',
-            { page }
-          );
+    case 'tv':
 
-        break;
+      data =
+        await tmdbFetch(
+          '/trending/tv/week',
+          { page }
+        );
 
-      case 'tv':
+      break;
 
-        data =
-          await tmdbFetch(
-            '/trending/tv/week',
-            { page }
-          );
 
-        break;
+    /*
+     * PROPER ANIME SOURCE
+     */
+    case 'anime':
 
-      case 'anime':
+      data =
+        await tmdbFetch(
+          '/discover/tv',
+          {
+            with_original_language:
+              'ja',
 
-        data =
-          await tmdbFetch(
-            '/trending/tv/week',
-            { page }
-          );
+            with_genres:
+              16,
 
-        if (
-          data &&
-          Array.isArray(
-            data.results
-          )
-        ) {
+            sort_by:
+              'popularity.desc',
 
-          data.results =
-            data.results.filter(
-              item =>
-                item.original_language ===
-                  'ja' &&
-                item.genre_ids &&
-                item.genre_ids.includes(
-                  16
-                )
-            );
-        }
+            page
+          }
+        );
 
-        break;
+      if (
+        data &&
+        Array.isArray(
+          data.results
+        )
+      ) {
 
-      case 'tagalog':
+        data.results.forEach(
+          item => {
+            item.media_type =
+              'tv';
+          }
+        );
+      }
 
-        data =
-          await tmdbFetch(
-            '/discover/movie',
-            {
-              with_original_language:
-                'tl',
+      break;
 
-              sort_by:
-                'popularity.desc',
 
-              page
-            }
-          );
+    case 'tagalog':
 
-        break;
+      data =
+        await tmdbFetch(
+          '/discover/movie',
+          {
+            with_original_language:
+              'tl',
 
-      case 'kdrama':
+            sort_by:
+              'popularity.desc',
 
-        data =
-          await tmdbFetch(
-            '/discover/tv',
-            {
-              with_original_language:
-                'ko',
+            page
+          }
+        );
 
-              sort_by:
-                'popularity.desc',
+      break;
 
-              page
-            }
-          );
 
-        break;
+    /*
+     * NEW TAGALOG TV
+     */
+    case 'tagalogTV':
 
-      default:
+      data =
+        await tmdbFetch(
+          '/discover/tv',
+          {
+            with_original_language:
+              'tl',
 
-        data = {
-          results: [],
-          total_pages: 0
-        };
-    }
+            sort_by:
+              'popularity.desc',
+
+            page
+          }
+        );
+
+      if (
+        data &&
+        Array.isArray(
+          data.results
+        )
+      ) {
+
+        data.results.forEach(
+          item => {
+            item.media_type =
+              'tv';
+          }
+        );
+      }
+
+      break;
+
+
+    case 'kdrama':
+
+      data =
+        await tmdbFetch(
+          '/discover/tv',
+          {
+            with_original_language:
+              'ko',
+
+            sort_by:
+              'popularity.desc',
+
+            page
+          }
+        );
+
+      if (
+        data &&
+        Array.isArray(
+          data.results
+        )
+      ) {
+
+        data.results.forEach(
+          item => {
+            item.media_type =
+              'tv';
+          }
+        );
+      }
+
+      break;
+
+
+    case 'vivamax':
+
+      data =
+        await fetchVivamax(
+          page
+        );
+
+      break;
+
+
+    default:
+
+      data = {
+        results: [],
+        total_pages: 0
+      };
   }
 
   if (!data) {
@@ -2042,18 +2139,6 @@ async function loadGridPage() {
             'tv';
         }
 
-        /*
-         * Anime needs to remain TV.
-         */
-        if (
-          gridCategory ===
-          'anime'
-        ) {
-
-          item.media_type =
-            'tv';
-        }
-
         const img =
           document.createElement(
             'img'
@@ -2124,10 +2209,6 @@ async function loadGridPage() {
       data.total_pages ||
       1;
 
-    /*
-     * Don't request beyond TMDB's
-     * available pages.
-     */
     if (
       gridPage >=
       totalPages
@@ -2173,8 +2254,9 @@ function showGridEnd() {
       'grid-modal-results'
     );
 
-  if (!container)
+  if (!container) {
     return;
+  }
 
   if (
     container.querySelector(
@@ -2213,8 +2295,9 @@ function handleGridScroll() {
   const scrollArea =
     getGridScrollArea();
 
-  if (!scrollArea)
+  if (!scrollArea) {
     return;
+  }
 
   const distanceFromBottom =
     scrollArea.scrollHeight -
@@ -2366,8 +2449,9 @@ async function searchTMDB() {
       'search-results'
     );
 
-  if (!input || !container)
+  if (!input || !container) {
     return;
+  }
 
   const query =
     input.value.trim();
@@ -2390,7 +2474,9 @@ async function searchTMDB() {
         }
       );
 
-    if (!data) return;
+    if (!data) {
+      return;
+    }
 
     container.innerHTML =
       '';
@@ -2484,13 +2570,10 @@ async function init() {
   try {
 
     /*
-     * IMPORTANT PERFORMANCE CHANGE:
+     * Initial homepage requests.
      *
-     * Only ONE page of each
-     * category is initially loaded.
-     *
-     * See All loads additional
-     * pages only when requested.
+     * Six category feeds plus
+     * the new Tagalog TV feed.
      */
 
     const [
@@ -2498,6 +2581,7 @@ async function init() {
       tvShows,
       anime,
       tagalogMovies,
+      tagalogTVShows,
       kDramas,
       vivamaxData
     ] = await Promise.all([
@@ -2513,6 +2597,8 @@ async function init() {
       fetchTrendingAnime(),
 
       fetchTagalog(),
+
+      fetchTagalogTV(),
 
       fetchKDramas(),
 
@@ -2534,6 +2620,9 @@ async function init() {
 
       tagalog:
         tagalogMovies,
+
+      tagalogTV:
+        tagalogTVShows,
 
       kdrama:
         kDramas,
@@ -2600,6 +2689,12 @@ async function init() {
       tagalogMovies,
       'tagalog-list',
       'movie'
+    );
+
+    displayList(
+      tagalogTVShows,
+      'tagalog-tv-list',
+      'tv'
     );
 
     displayList(
