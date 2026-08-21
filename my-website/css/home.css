@@ -193,10 +193,6 @@ body.modal-open {
   overflow: hidden;
 }
 
-/*
-  Extra cinematic gradients.
-*/
-
 .banner::before {
   content: "";
 
@@ -538,11 +534,6 @@ body.modal-open {
 .list::-webkit-scrollbar {
   display: none;
 }
-
-/*
-  Existing JS creates images directly.
-  We style them as premium poster cards.
-*/
 
 .list img {
   width: 135px;
