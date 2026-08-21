@@ -13,7 +13,7 @@ const BASE_URL = 'https://api.themoviedb.org/3';
  * - Tagalog Movies
  * - Tagalog TV
  * - K-Dramas
- * - Top Rated Vivamax
+ * - Trending Vivamax / Pinoy Movies
  * - Search
  * - Watchlist
  * - Continue Watching
@@ -57,8 +57,6 @@ const PLACEHOLDER_IMG =
  * CONSTANTS
  * =========================================================
  */
-
-const VIVAMAX_COMPANY_ID = 149142;
 
 const MAX_ROW_ITEMS = 20;
 
@@ -878,7 +876,7 @@ async function fetchByGenreId(
 
 /*
  * =========================================================
- * VIVAMAX
+ * TRENDING VIVAMAX / PINOY MOVIES
  * =========================================================
  */
 
@@ -906,14 +904,14 @@ async function fetchVivamax(
       '/discover/movie',
       {
 
-        with_companies:
-          VIVAMAX_COMPANY_ID,
+        with_original_language:
+          'tl',
 
         sort_by:
-          'vote_average.desc',
+          'popularity.desc',
 
         'vote_count.gte':
-          5,
+          0,
 
         include_adult:
           true,
@@ -2818,7 +2816,7 @@ function openGridModal(
       'Trending K-Dramas',
 
     vivamax:
-      'Top Rated Vivamax'
+      'Trending Vivamax Movies'
 
   };
 
@@ -3697,7 +3695,7 @@ async function searchTMDB() {
           query,
 
           include_adult:
-            false,
+            true,
 
           page: 1
 
