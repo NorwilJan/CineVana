@@ -24,7 +24,6 @@ const BASE_URL = 'https://api.themoviedb.org/3';
  * - Request caching
  * - Duplicate prevention
  * - Better loading/error handling
- * - Better movie/show cards
  * =========================================================
  */
 
@@ -43,6 +42,7 @@ const MODAL_POSTER_URL =
 
 const BACKDROP_URL =
   'https://image.tmdb.org/t/p/original';
+
 
 const PLACEHOLDER_IMG =
   'data:image/svg+xml;utf8,' +
@@ -116,6 +116,9 @@ let fullDataCache = {
 /*
  * =========================================================
  * API CACHE
+ *
+ * Keeps successful API responses in memory so the same
+ * request isn't repeatedly downloaded during one session.
  * =========================================================
  */
 
@@ -170,7 +173,6 @@ function sleep(ms) {
   return new Promise(
     resolve => setTimeout(resolve, ms)
   );
-
 }
 
 
@@ -200,10 +202,7 @@ function getItemTitle(item) {
 }
 
 
-function getMediaType(
-  item,
-  fallback = 'movie'
-) {
+function getMediaType(item, fallback = 'movie') {
 
   if (!item) {
     return fallback;
@@ -217,17 +216,11 @@ function getMediaType(
     return 'tv';
   }
 
-  if (
-    item.title ||
-    item.original_title
-  ) {
+  if (item.title || item.original_title) {
     return 'movie';
   }
 
-  if (
-    item.name ||
-    item.original_name
-  ) {
+  if (item.name || item.original_name) {
     return 'tv';
   }
 
@@ -236,23 +229,17 @@ function getMediaType(
 }
 
 
-function prepareItem(
-  item,
-  mediaType
-) {
+function prepareItem(item, mediaType) {
 
   if (!item) {
     return null;
   }
 
   if (!item.media_type) {
-
-    item.media_type =
-      getMediaType(
-        item,
-        mediaType
-      );
-
+    item.media_type = getMediaType(
+      item,
+      mediaType
+    );
   }
 
   return item;
@@ -266,10 +253,7 @@ function prepareItem(
  * =========================================================
  */
 
-function getPosterUrl(
-  path,
-  size = 'normal'
-) {
+function getPosterUrl(path, size = 'normal') {
 
   if (!path) {
     return PLACEHOLDER_IMG;
@@ -356,7 +340,6 @@ async function tmdbFetch(
 
     const cached =
       apiCache.get(cacheKey);
-
 
     if (
       cached &&
@@ -575,12 +558,9 @@ function uniqueItems(
  * =========================================================
  */
 
-function uniqueByTitle(
-  items = []
-) {
+function uniqueByTitle(items = []) {
 
   const seen = new Set();
-
 
   return items.filter(
     item => {
@@ -649,6 +629,8 @@ async function fetchTrending(type) {
 /*
  * =========================================================
  * ANIME
+ *
+ * Japanese + Animation
  * =========================================================
  */
 
@@ -1063,397 +1045,6 @@ function playBanner() {
 
 /*
  * =========================================================
- * CREATE MOVIE CARD
- * =========================================================
- */
-
-function createMovieCard(
-  item,
-  mediaType = null
-) {
-
-  if (!item || !item.id) {
-    return null;
-  }
-
-
-  prepareItem(
-    item,
-    mediaType
-  );
-
-
-  const type =
-    getMediaType(
-      item,
-      mediaType || 'movie'
-    );
-
-
-  const title =
-    getItemTitle(item);
-
-
-  const releaseDate =
-    item.release_date ||
-    item.first_air_date ||
-    '';
-
-
-  const year =
-    releaseDate
-      ? releaseDate.substring(0, 4)
-      : '';
-
-
-  const rating =
-    Number(
-      item.vote_average
-    ) || 0;
-
-
-  /*
-   * CARD
-   */
-
-  const card =
-    document.createElement(
-      'div'
-    );
-
-
-  card.className =
-    'movie-card';
-
-
-  card.dataset.mediaType =
-    type;
-
-
-  card.dataset.id =
-    item.id;
-
-
-  /*
-   * POSTER
-   */
-
-  const posterWrapper =
-    document.createElement(
-      'div'
-    );
-
-
-  posterWrapper.className =
-    'movie-card-poster';
-
-
-  const img =
-    document.createElement(
-      'img'
-    );
-
-
-  img.src =
-    getPosterUrl(
-      item.poster_path
-    );
-
-
-  img.alt =
-    title;
-
-
-  img.loading =
-    'lazy';
-
-
-  img.decoding =
-    'async';
-
-
-  img.onerror = () => {
-
-    img.onerror = null;
-
-    img.src =
-      PLACEHOLDER_IMG;
-
-  };
-
-
-  posterWrapper.appendChild(
-    img
-  );
-
-
-  /*
-   * MEDIA TYPE BADGE
-   */
-
-  const badge =
-    document.createElement(
-      'span'
-    );
-
-
-  badge.className =
-    `media-badge ${type}`;
-
-
-  badge.textContent =
-    type === 'tv'
-      ? 'TV'
-      : 'MOVIE';
-
-
-  posterWrapper.appendChild(
-    badge
-  );
-
-
-  /*
-   * HOVER INFORMATION
-   */
-
-  const hoverInfo =
-    document.createElement(
-      'div'
-    );
-
-
-  hoverInfo.className =
-    'movie-card-hover';
-
-
-  const hoverTitle =
-    document.createElement(
-      'div'
-    );
-
-
-  hoverTitle.className =
-    'movie-card-hover-title';
-
-
-  hoverTitle.textContent =
-    title;
-
-
-  const hoverMeta =
-    document.createElement(
-      'div'
-    );
-
-
-  hoverMeta.className =
-    'movie-card-hover-meta';
-
-
-  if (year) {
-
-    const yearSpan =
-      document.createElement(
-        'span'
-      );
-
-
-    yearSpan.textContent =
-      year;
-
-
-    hoverMeta.appendChild(
-      yearSpan
-    );
-
-  }
-
-
-  if (rating > 0) {
-
-    const ratingSpan =
-      document.createElement(
-        'span'
-      );
-
-
-    ratingSpan.textContent =
-      `⭐ ${rating.toFixed(1)}`;
-
-
-    hoverMeta.appendChild(
-      ratingSpan
-    );
-
-  }
-
-
-  const playText =
-    document.createElement(
-      'div'
-    );
-
-
-  playText.className =
-    'movie-card-play';
-
-
-  playText.textContent =
-    '▶ Watch';
-
-
-  hoverInfo.appendChild(
-    hoverTitle
-  );
-
-
-  hoverInfo.appendChild(
-    hoverMeta
-  );
-
-
-  hoverInfo.appendChild(
-    playText
-  );
-
-
-  posterWrapper.appendChild(
-    hoverInfo
-  );
-
-
-  /*
-   * CARD INFORMATION
-   */
-
-  const info =
-    document.createElement(
-      'div'
-    );
-
-
-  info.className =
-    'movie-card-info';
-
-
-  const cardTitle =
-    document.createElement(
-      'div'
-    );
-
-
-  cardTitle.className =
-    'movie-card-title';
-
-
-  cardTitle.textContent =
-    title;
-
-
-  cardTitle.title =
-    title;
-
-
-  const cardMeta =
-    document.createElement(
-      'div'
-    );
-
-
-  cardMeta.className =
-    'movie-card-meta';
-
-
-  if (year) {
-
-    const yearEl =
-      document.createElement(
-        'span'
-      );
-
-
-    yearEl.className =
-      'movie-card-year';
-
-
-    yearEl.textContent =
-      year;
-
-
-    cardMeta.appendChild(
-      yearEl
-    );
-
-  }
-
-
-  if (rating > 0) {
-
-    const ratingEl =
-      document.createElement(
-        'span'
-      );
-
-
-    ratingEl.className =
-      'movie-card-rating';
-
-
-    ratingEl.textContent =
-      `⭐ ${rating.toFixed(1)}`;
-
-
-    cardMeta.appendChild(
-      ratingEl
-    );
-
-  }
-
-
-  info.appendChild(
-    cardTitle
-  );
-
-
-  info.appendChild(
-    cardMeta
-  );
-
-
-  card.appendChild(
-    posterWrapper
-  );
-
-
-  card.appendChild(
-    info
-  );
-
-
-  /*
-   * OPEN DETAILS
-   */
-
-  card.onclick = () => {
-
-    openedFromGrid =
-      false;
-
-
-    showDetails(
-      item
-    );
-
-  };
-
-
-  return card;
-
-}
-
-
-/*
- * =========================================================
  * DISPLAY LIST
  * =========================================================
  */
@@ -1502,20 +1093,55 @@ function displayList(
   limitedItems.forEach(
     item => {
 
-      const card =
-        createMovieCard(
-          item,
-          mediaType
+      const img =
+        document.createElement(
+          'img'
         );
 
 
-      if (card) {
-
-        container.appendChild(
-          card
+      img.src =
+        getPosterUrl(
+          item.poster_path
         );
 
-      }
+
+      img.alt =
+        getItemTitle(item);
+
+
+      img.loading =
+        'lazy';
+
+
+      img.decoding =
+        'async';
+
+
+      img.onerror = () => {
+
+        img.onerror = null;
+
+        img.src =
+          PLACEHOLDER_IMG;
+
+      };
+
+
+      img.onclick = () => {
+
+        openedFromGrid =
+          false;
+
+        showDetails(
+          item
+        );
+
+      };
+
+
+      container.appendChild(
+        img
+      );
 
     }
   );
@@ -1663,6 +1289,7 @@ async function showDetails(item) {
       stars > 0
         ? '★'.repeat(stars)
         : '';
+
 
   }
 
@@ -3625,20 +3252,83 @@ async function loadGridPage() {
           mediaType;
 
 
-        const card =
-          createGridMovieCard(
-            item,
-            mediaType
+        const img =
+          document.createElement(
+            'img'
           );
 
 
-        if (card) {
-
-          container.appendChild(
-            card
+        img.src =
+          getPosterUrl(
+            item.poster_path
           );
 
-        }
+
+        img.alt =
+          getItemTitle(item);
+
+
+        img.loading =
+          'lazy';
+
+
+        img.decoding =
+          'async';
+
+
+        img.onerror = () => {
+
+          img.onerror = null;
+
+          img.src =
+            PLACEHOLDER_IMG;
+
+        };
+
+
+        img.onclick = () => {
+
+          const scrollArea =
+            getGridScrollArea();
+
+
+          if (scrollArea) {
+
+            gridScrollPosition =
+              scrollArea.scrollTop;
+
+          }
+
+
+          const gridModal =
+            document.getElementById(
+              'grid-modal'
+            );
+
+
+          if (gridModal) {
+
+            gridModal.classList.remove(
+              'active'
+            );
+
+          }
+
+
+          openedFromGrid =
+            true;
+
+
+          showDetails(
+            item
+          );
+
+        };
+
+
+        container.appendChild(
+          img
+        );
 
       }
     );
@@ -3678,85 +3368,13 @@ async function loadGridPage() {
 
     loading.remove();
 
+
   } finally {
 
     gridLoading =
       false;
 
   }
-
-}
-
-
-/*
- * =========================================================
- * GRID CARD
- * =========================================================
- */
-
-function createGridMovieCard(
-  item,
-  mediaType
-) {
-
-  const card =
-    createMovieCard(
-      item,
-      mediaType
-    );
-
-
-  if (!card) {
-    return null;
-  }
-
-
-  /*
-   * Override the normal row behavior so
-   * returning from details opens the grid.
-   */
-
-  card.onclick = () => {
-
-    const scrollArea =
-      getGridScrollArea();
-
-
-    if (scrollArea) {
-
-      gridScrollPosition =
-        scrollArea.scrollTop;
-
-    }
-
-
-    const gridModal =
-      document.getElementById(
-        'grid-modal'
-      );
-
-
-    if (gridModal) {
-
-      gridModal.classList.remove(
-        'active'
-      );
-
-    }
-
-
-    openedFromGrid =
-      true;
-
-
-    showDetails(
-      item
-    );
-
-  };
-
-
-  return card;
 
 }
 
@@ -4100,7 +3718,9 @@ async function searchTMDB() {
     }
 
 
-    if (!data) {
+    if (
+      !data
+    ) {
 
       container.innerHTML =
         '<div style="' +
@@ -4154,19 +3774,45 @@ async function searchTMDB() {
     results.forEach(
       item => {
 
-        const card =
-          createMovieCard(
-            item,
-            item.media_type
+        const img =
+          document.createElement(
+            'img'
           );
 
 
-        if (!card) {
-          return;
-        }
+        img.src =
+          getPosterUrl(
+            item.poster_path
+          );
 
 
-        card.onclick = () => {
+        img.alt =
+          getItemTitle(item);
+
+
+        img.loading =
+          'lazy';
+
+
+        img.decoding =
+          'async';
+
+
+        img.title =
+          getItemTitle(item);
+
+
+        img.onerror = () => {
+
+          img.onerror = null;
+
+          img.src =
+            PLACEHOLDER_IMG;
+
+        };
+
+
+        img.onclick = () => {
 
           closeSearchModal();
 
@@ -4181,7 +3827,7 @@ async function searchTMDB() {
 
 
         container.appendChild(
-          card
+          img
         );
 
       }
@@ -4302,7 +3948,7 @@ async function init() {
   try {
 
     /*
-     * Load homepage feeds simultaneously.
+     * Load the homepage feeds simultaneously.
      */
 
     const [
@@ -4403,6 +4049,8 @@ async function init() {
 
     /*
      * Banner
+     *
+     * Prefer items with a backdrop.
      */
 
     const bannerCandidates =
@@ -4434,7 +4082,7 @@ async function init() {
 
 
     /*
-     * Movie title
+     * Movie title.
      */
 
     const movieRowH2 =
@@ -4452,7 +4100,7 @@ async function init() {
 
 
     /*
-     * Homepage rows
+     * Homepage rows.
      */
 
     displayList(
