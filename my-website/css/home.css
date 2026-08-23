@@ -35,6 +35,8 @@ body {
 }
 
 body.modal-open {
+  position: fixed;
+  width: 100%;
   overflow: hidden;
 }
 
@@ -1191,10 +1193,7 @@ body.modal-open {
 
 .search-modal .results {
   display: grid;
-
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
-
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 
   width: 100%;
@@ -1371,16 +1370,8 @@ body.modal-open {
   }
 
   .search-modal .results {
-    display: flex;
-
-    flex-wrap: wrap;
-
-    justify-content: center;
-  }
-
-  .search-modal img {
-    width: 145px;
-    height: 218px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 15px;
   }
 
 }
