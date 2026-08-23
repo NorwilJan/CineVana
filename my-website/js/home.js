@@ -18,10 +18,12 @@ let bannerItem = null;
 
 let currentSeason = 1;
 let currentEpisode = 1;
-let currentTabCategory = 'all'; // Tracks active category tab for context-aware filtering
-let currentServer = 'videasy';    // Default server ('videasy', 'vidsrc-cc', 'embed-su')
+let currentTabCategory = 'all'; 
+let currentServer = 'videasy';    
 
 let searchTimeout = null;
+let lastScrollPosition = 0;
+let episodeFetchToken = 0;
 
 const showDetailsCache = {};
 const episodeCache = {};
@@ -56,6 +58,24 @@ let gridScrollPosition = 0;
 let openedFromGrid = false;
 
 const gridPageCache = {};
+
+/*
+ * =========================
+ * MODAL SCROLL LOCK HELPER
+ * =========================
+ */
+
+function lockBodyScroll() {
+  lastScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+  document.body.style.top = `-${lastScrollPosition}px`;
+  document.body.classList.add('modal-open');
+}
+
+function unlockBodyScroll() {
+  document.body.classList.remove('modal-open');
+  document.body.style.top = '';
+  window.scrollTo(0, lastScrollPosition);
+}
 
 /*
  * =========================
@@ -295,7 +315,7 @@ async function showDetails(item) {
   const modal = document.getElementById('modal');
   if (modal) {
     modal.classList.add('active');
-    document.body.classList.add('modal-open');
+    lockBodyScroll();
   }
 
   if (isTv) {
@@ -400,6 +420,7 @@ async function loadTVSeasons(tvId, targetSeason = 1, targetEpisode = 1) {
 }
 
 async function loadEpisodes(tvId, seasonNumber) {
+  const fetchToken = ++episodeFetchToken;
   const previousSeason = currentSeason;
   currentSeason = seasonNumber;
 
@@ -415,6 +436,8 @@ async function loadEpisodes(tvId, seasonNumber) {
       data = await tmdbFetch(`/tv/${tvId}/season/${seasonNumber}`);
       if (data) episodeCache[cacheKey] = data;
     }
+
+    if (fetchToken !== episodeFetchToken) return;
 
     if (data && data.episodes && data.episodes.length > 0) {
       if (previousSeason !== seasonNumber || !currentEpisode) {
@@ -454,13 +477,13 @@ function closeModal() {
 
   const modal = document.getElementById('modal');
   if (modal) modal.classList.remove('active');
-  document.body.classList.remove('modal-open');
+  unlockBodyScroll();
 
   if (openedFromGrid) {
     const gridModal = document.getElementById('grid-modal');
     if (gridModal) {
       gridModal.classList.add('active');
-      document.body.classList.add('modal-open');
+      lockBodyScroll();
       requestAnimationFrame(() => {
         const scrollArea = getGridScrollArea();
         if (scrollArea) scrollArea.scrollTop = gridScrollPosition;
@@ -731,7 +754,7 @@ function openGridModal(category) {
   if (titleEl) titleEl.textContent = titles[category] || 'Category';
   container.innerHTML = '';
   modal.classList.add('active');
-  document.body.classList.add('modal-open');
+  lockBodyScroll();
 
   loadGridPage();
 }
@@ -892,7 +915,7 @@ function handleGridScroll() {
 function closeGridModal() {
   const modal = document.getElementById('grid-modal');
   if (modal) modal.classList.remove('active');
-  document.body.classList.remove('modal-open');
+  unlockBodyScroll();
   openedFromGrid = false;
 }
 
@@ -906,7 +929,7 @@ function openSearchModal() {
   const modal = document.getElementById('search-modal');
   const input = document.getElementById('search-input');
   if (modal) modal.classList.add('active');
-  document.body.classList.add('modal-open');
+  lockBodyScroll();
   if (input) input.focus();
 }
 
@@ -916,7 +939,7 @@ function closeSearchModal() {
   const input = document.getElementById('search-input');
 
   if (modal) modal.classList.remove('active');
-  document.body.classList.remove('modal-open');
+  unlockBodyScroll();
   if (results) results.innerHTML = '';
   if (input) input.value = '';
 }
