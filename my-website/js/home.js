@@ -56,6 +56,41 @@ const gridPageCache = {};
 
 /*
  * =========================
+ * LOCALSTORAGE CACHING (API)
+ * =========================
+ */
+
+const CACHE_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours
+
+function getCachedApiData(key) {
+  try {
+    const cachedItem = localStorage.getItem(`cache_${key}`);
+    if (!cachedItem) return null;
+    const { data, timestamp } = JSON.parse(cachedItem);
+    if (Date.now() - timestamp < CACHE_DURATION_MS) {
+      return data;
+    }
+    localStorage.removeItem(`cache_${key}`);
+  } catch (e) {
+    console.error('Error reading API cache:', e);
+  }
+  return null;
+}
+
+function setCachedApiData(key, data) {
+  try {
+    const cachePayload = {
+      data,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(`cache_${key}`, JSON.stringify(cachePayload));
+  } catch (e) {
+    console.error('Error setting API cache:', e);
+  }
+}
+
+/*
+ * =========================
  * MODAL SCROLL LOCK HELPER
  * =========================
  */
@@ -130,10 +165,20 @@ async function fetchMultiplePages(endpoint, maxPages = 1, params = {}) {
 }
 
 async function fetchTrending(type) {
-  return await fetchMultiplePages(`/trending/${type}/week`, 1);
+  const cacheKey = `trending_${type}`;
+  const cached = getCachedApiData(cacheKey);
+  if (cached) return cached;
+
+  const results = await fetchMultiplePages(`/trending/${type}/week`, 1);
+  if (results.length > 0) setCachedApiData(cacheKey, results);
+  return results;
 }
 
 async function fetchTrendingAnime() {
+  const cacheKey = `trending_anime`;
+  const cached = getCachedApiData(cacheKey);
+  if (cached) return cached;
+
   const data = await tmdbFetch('/discover/tv', {
     with_original_language: 'ja',
     with_genres: 16,
@@ -143,21 +188,32 @@ async function fetchTrendingAnime() {
 
   if (data && Array.isArray(data.results)) {
     data.results.forEach(item => { item.media_type = 'tv'; });
+    setCachedApiData(cacheKey, data.results);
     return data.results;
   }
   return [];
 }
 
 async function fetchTagalog() {
+  const cacheKey = `trending_tagalog`;
+  const cached = getCachedApiData(cacheKey);
+  if (cached) return cached;
+
   const data = await tmdbFetch('/discover/movie', {
     with_original_language: 'tl',
     sort_by: 'popularity.desc',
     page: 1
   });
-  return data && Array.isArray(data.results) ? data.results : [];
+  const results = data && Array.isArray(data.results) ? data.results : [];
+  if (results.length > 0) setCachedApiData(cacheKey, results);
+  return results;
 }
 
 async function fetchKDramas() {
+  const cacheKey = `trending_kdrama`;
+  const cached = getCachedApiData(cacheKey);
+  if (cached) return cached;
+
   const data = await tmdbFetch('/discover/tv', {
     with_original_language: 'ko',
     sort_by: 'popularity.desc',
@@ -166,6 +222,7 @@ async function fetchKDramas() {
 
   if (data && Array.isArray(data.results)) {
     data.results.forEach(item => { item.media_type = 'tv'; });
+    setCachedApiData(cacheKey, data.results);
     return data.results;
   }
   return [];
@@ -201,7 +258,7 @@ function playBanner() {
 
 /*
  * =========================
- * HORIZONTAL LIST
+ * HORIZONTAL LIST & TOUCH/DRAG SCROLLING
  * =========================
  */
 
@@ -221,15 +278,70 @@ function displayList(items, containerId, mediaType) {
     img.alt = item.title || item.name || '';
     img.loading = 'lazy';
     img.decoding = 'async';
+    img.draggable = false;
     img.onerror = () => {
       img.onerror = null;
       img.src = PLACEHOLDER_IMG;
     };
-    img.onclick = () => {
+    img.onclick = (e) => {
+      if (img.dataset.didDrag === 'true') return;
       openedFromGrid = false;
       showDetails(item);
     };
     container.appendChild(img);
+  });
+
+  setupListInteractions(container);
+}
+
+function setupListInteractions(listEl) {
+  if (listEl.dataset.interactiveInitialized === 'true') return;
+  listEl.dataset.interactiveInitialized = 'true';
+
+  let isDown = false;
+  let startX;
+  let scrollLeft;
+  let hasMoved = false;
+
+  listEl.addEventListener('mousedown', (e) => {
+    isDown = true;
+    hasMoved = false;
+    listEl.classList.add('dragging');
+    startX = e.pageX - listEl.offsetLeft;
+    scrollLeft = listEl.scrollLeft;
+  });
+
+  listEl.addEventListener('mouseleave', () => {
+    isDown = false;
+    listEl.classList.remove('dragging');
+  });
+
+  listEl.addEventListener('mouseup', (e) => {
+    isDown = false;
+    listEl.classList.remove('dragging');
+    const images = listEl.querySelectorAll('img');
+    images.forEach(img => {
+      img.dataset.didDrag = hasMoved ? 'true' : 'false';
+    });
+  });
+
+  listEl.addEventListener('mousemove', (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    hasMoved = true;
+    const x = e.pageX - listEl.offsetLeft;
+    const walk = (x - startX) * 1.5;
+    listEl.scrollLeft = scrollLeft - walk;
+  });
+}
+
+function scrollList(containerId, direction) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const scrollAmount = container.clientWidth * 0.75;
+  container.scrollBy({
+    left: direction * scrollAmount,
+    behavior: 'smooth'
   });
 }
 
@@ -420,7 +532,7 @@ function closeModal() {
 
 /*
  * =========================
- * WATCHLIST & CONTINUE WATCHING
+ * WATCHLIST, CONTINUE WATCHING & CLEAR ACTIONS
  * =========================
  */
 
@@ -474,6 +586,13 @@ function renderWatchlistRow() {
   if (list.length) displayList(list, 'watchlist-list', 'movie');
 }
 
+function clearWatchlist() {
+  if (confirm('Are you sure you want to clear your My List?')) {
+    localStorage.removeItem('myList');
+    renderWatchlistRow();
+  }
+}
+
 function getContinueWatching() {
   try {
     return JSON.parse(localStorage.getItem('continueWatching')) || [];
@@ -509,6 +628,13 @@ function renderContinueWatchingRow() {
 
   row.style.display = list.length ? 'block' : 'none';
   if (list.length) displayList(list, 'continue-list', 'movie');
+}
+
+function clearContinueWatching() {
+  if (confirm('Are you sure you want to clear your watch history?')) {
+    localStorage.removeItem('continueWatching');
+    renderContinueWatchingRow();
+  }
 }
 
 /*
