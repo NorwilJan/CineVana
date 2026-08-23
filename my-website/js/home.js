@@ -11,15 +11,12 @@ const BACKDROP_URL = 'https://image.tmdb.org/t/p/original';
 const PLACEHOLDER_IMG =
   'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="130" height="195" fill="%23222"><rect width="100%" height="100%"/></svg>';
 
-const VIVAMAX_COMPANY_ID = 149142;
-
 let currentItem = null;
 let bannerItem = null;
 
 let currentSeason = 1;
 let currentEpisode = 1;
 let currentTabCategory = 'all'; 
-let currentServer = 'videasy';    
 
 let searchTimeout = null;
 let lastScrollPosition = 0;
@@ -39,9 +36,7 @@ let fullDataCache = {
   tv: [],
   anime: [],
   tagalog: [],
-  tagalogTV: [],
-  kdrama: [],
-  vivamax: []
+  kdrama: []
 };
 
 /*
@@ -162,20 +157,6 @@ async function fetchTagalog() {
   return data && Array.isArray(data.results) ? data.results : [];
 }
 
-async function fetchTagalogTV() {
-  const data = await tmdbFetch('/discover/tv', {
-    with_original_language: 'tl',
-    sort_by: 'popularity.desc',
-    page: 1
-  });
-
-  if (data && Array.isArray(data.results)) {
-    data.results.forEach(item => { item.media_type = 'tv'; });
-    return data.results;
-  }
-  return [];
-}
-
 async function fetchKDramas() {
   const data = await tmdbFetch('/discover/tv', {
     with_original_language: 'ko',
@@ -188,23 +169,6 @@ async function fetchKDramas() {
     return data.results;
   }
   return [];
-}
-
-async function fetchVivamax(page = 1) {
-  const cacheKey = `vivamax_${page}`;
-  if (gridPageCache[cacheKey]) return gridPageCache[cacheKey];
-
-  const data = await tmdbFetch('/discover/movie', {
-    with_companies: VIVAMAX_COMPANY_ID,
-    sort_by: 'vote_average.desc',
-    'vote_count.gte': 5,
-    include_adult: true,
-    page
-  });
-
-  const result = data || { results: [], total_pages: 0 };
-  gridPageCache[cacheKey] = result;
-  return result;
 }
 
 /*
@@ -325,23 +289,6 @@ async function showDetails(item) {
   }
 }
 
-/*
- * =========================
- * MULTI-SERVER VIDEO PLAYER
- * =========================
- */
-
-function switchServer(serverName, buttonElement) {
-  currentServer = serverName;
-
-  document.querySelectorAll('.server-btn').forEach(btn => btn.classList.remove('active'));
-  if (buttonElement) {
-    buttonElement.classList.add('active');
-  }
-
-  loadVideo();
-}
-
 function loadVideo() {
   if (!currentItem) return;
 
@@ -351,31 +298,10 @@ function loadVideo() {
   const isTv = currentItem.media_type === 'tv' || !currentItem.title;
   let embedURL = '';
 
-  switch (currentServer) {
-    case 'vidsrc-cc':
-      if (isTv) {
-        embedURL = `https://vidsrc.cc/v2/embed/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
-      } else {
-        embedURL = `https://vidsrc.cc/v2/embed/movie/${currentItem.id}`;
-      }
-      break;
-
-    case 'embed-su':
-      if (isTv) {
-        embedURL = `https://embed.su/embed/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
-      } else {
-        embedURL = `https://embed.su/embed/movie/${currentItem.id}`;
-      }
-      break;
-
-    case 'videasy':
-    default:
-      if (isTv) {
-        embedURL = `https://player.videasy.net/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
-      } else {
-        embedURL = `https://player.videasy.net/movie/${currentItem.id}`;
-      }
-      break;
+  if (isTv) {
+    embedURL = `https://player.videasy.net/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
+  } else {
+    embedURL = `https://player.videasy.net/movie/${currentItem.id}`;
   }
 
   if (iframe.src === embedURL) return;
@@ -604,9 +530,7 @@ function filterContent(category, eventElement) {
     tv: document.getElementById('tvshows-row'),
     anime: document.getElementById('anime-row'),
     tagalog: document.getElementById('tagalog-row'),
-    tagalogTV: document.getElementById('tagalog-tv-row'),
-    kdrama: document.getElementById('kdrama-row'),
-    vivamax: document.getElementById('vivamax-row')
+    kdrama: document.getElementById('kdrama-row')
   };
 
   const hasWatchlist = getWatchlist().length > 0;
@@ -619,100 +543,20 @@ function filterContent(category, eventElement) {
   if (category === 'all') {
     if (hasContinue && rows.continue) rows.continue.style.display = 'block';
     if (hasWatchlist && rows.watchlist) rows.watchlist.style.display = 'block';
-    ['movies', 'tv', 'anime', 'tagalog', 'tagalogTV', 'kdrama', 'vivamax'].forEach(key => {
+    ['movies', 'tv', 'anime', 'tagalog', 'kdrama'].forEach(key => {
       if (rows[key]) rows[key].style.display = 'block';
     });
   } else if (category === 'movie') {
-    ['movies', 'tagalog', 'vivamax'].forEach(key => {
+    ['movies', 'tagalog'].forEach(key => {
       if (rows[key]) rows[key].style.display = 'block';
     });
   } else if (category === 'tv') {
-    ['tv', 'tagalogTV', 'kdrama'].forEach(key => {
+    ['tv', 'kdrama'].forEach(key => {
       if (rows[key]) rows[key].style.display = 'block';
     });
   } else if (category === 'anime') {
     if (rows.anime) rows.anime.style.display = 'block';
   }
-}
-
-/*
- * =========================
- * SMART CONTEXT-AWARE GENRE FILTER
- * =========================
- */
-
-async function filterByGenre(genreId, eventElement) {
-  document.querySelectorAll('.genre-btn').forEach(btn => btn.classList.remove('active'));
-  if (eventElement) eventElement.classList.add('active');
-
-  if (genreId === 'all') {
-    restoreAllRows();
-    filterContent(currentTabCategory, document.querySelector('.tab-btn.active'));
-    return;
-  }
-
-  let endpoint = '/discover/movie';
-  let params = { with_genres: genreId, sort_by: 'popularity.desc', page: 1 };
-  let targetRowId = 'movies-row';
-  let targetListId = 'movies-list';
-  let targetMediaType = 'movie';
-
-  if (currentTabCategory === 'tv') {
-    endpoint = '/discover/tv';
-    targetRowId = 'tvshows-row';
-    targetListId = 'tvshows-list';
-    targetMediaType = 'tv';
-  } else if (currentTabCategory === 'anime') {
-    endpoint = '/discover/tv';
-    params.with_original_language = 'ja';
-    params.with_genres = `${genreId},16`;
-    targetRowId = 'anime-row';
-    targetListId = 'anime-list';
-    targetMediaType = 'tv';
-  }
-
-  const data = await tmdbFetch(endpoint, params);
-  const results = data && Array.isArray(data.results) ? data.results : [];
-
-  if (targetMediaType === 'tv') {
-    results.forEach(item => { item.media_type = 'tv'; });
-  }
-
-  [
-    'continue-row',
-    'watchlist-row',
-    'movies-row',
-    'tvshows-row',
-    'anime-row',
-    'tagalog-row',
-    'tagalog-tv-row',
-    'kdrama-row',
-    'vivamax-row'
-  ].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = 'none';
-  });
-
-  const targetRow = document.getElementById(targetRowId);
-  if (targetRow) {
-    targetRow.style.display = 'block';
-    const heading = targetRow.querySelector('h2');
-    if (heading) {
-      const genreName = eventElement ? eventElement.textContent : 'Genre';
-      heading.textContent = `${genreName} ${currentTabCategory === 'anime' ? 'Anime' : currentTabCategory === 'tv' ? 'TV Shows' : 'Movies'}`;
-    }
-    displayList(results, targetListId, targetMediaType);
-  }
-}
-
-function restoreAllRows() {
-  const ids = ['movies-row', 'tvshows-row', 'anime-row', 'tagalog-row', 'tagalog-tv-row', 'kdrama-row', 'vivamax-row'];
-  ids.forEach(id => {
-    const row = document.getElementById(id);
-    if (row) row.style.display = 'block';
-  });
-  renderWatchlistRow();
-  renderContinueWatchingRow();
 }
 
 /*
@@ -746,9 +590,7 @@ function openGridModal(category) {
     tv: 'Trending TV Shows',
     anime: 'Trending Anime',
     tagalog: 'Trending Tagalog Movies',
-    tagalogTV: 'Trending Tagalog TV Shows',
-    kdrama: 'Trending K-Dramas',
-    vivamax: 'Top Rated Vivamax'
+    kdrama: 'Trending K-Dramas'
   };
 
   if (titleEl) titleEl.textContent = titles[category] || 'Category';
@@ -789,16 +631,6 @@ async function fetchGridPage(category, page) {
         page
       });
       break;
-    case 'tagalogTV':
-      data = await tmdbFetch('/discover/tv', {
-        with_original_language: 'tl',
-        sort_by: 'popularity.desc',
-        page
-      });
-      if (data && Array.isArray(data.results)) {
-        data.results.forEach(item => { item.media_type = 'tv'; });
-      }
-      break;
     case 'kdrama':
       data = await tmdbFetch('/discover/tv', {
         with_original_language: 'ko',
@@ -808,9 +640,6 @@ async function fetchGridPage(category, page) {
       if (data && Array.isArray(data.results)) {
         data.results.forEach(item => { item.media_type = 'tv'; });
       }
-      break;
-    case 'vivamax':
-      data = await fetchVivamax(page);
       break;
     default:
       data = { results: [], total_pages: 0 };
@@ -849,7 +678,7 @@ async function loadGridPage() {
 
     results.forEach(item => {
       if (!item.poster_path) return;
-      if (gridCategory === 'movies' || gridCategory === 'tagalog' || gridCategory === 'vivamax') {
+      if (gridCategory === 'movies' || gridCategory === 'tagalog') {
         item.media_type = 'movie';
       } else {
         item.media_type = 'tv';
@@ -1005,45 +834,32 @@ async function init() {
       tvShows,
       anime,
       tagalogMovies,
-      tagalogTVShows,
-      kDramas,
-      vivamaxData
+      kDramas
     ] = await Promise.all([
       fetchTrending('movie'),
       fetchTrending('tv'),
       fetchTrendingAnime(),
       fetchTagalog(),
-      fetchTagalogTV(),
-      fetchKDramas(),
-      fetchVivamax(1)
+      fetchKDramas()
     ]);
-
-    const vivamax = vivamaxData.results || [];
 
     fullDataCache = {
       movies,
       tv: tvShows,
       anime,
       tagalog: tagalogMovies,
-      tagalogTV: tagalogTVShows,
-      kdrama: kDramas,
-      vivamax
+      kdrama: kDramas
     };
 
     if (movies.length > 0) {
       displayBanner(movies[Math.floor(Math.random() * movies.length)]);
     }
 
-    const movieRowH2 = document.querySelector('#movies-row h2');
-    if (movieRowH2) movieRowH2.textContent = 'Trending Movies';
-
     displayList(movies, 'movies-list', 'movie');
     displayList(tvShows, 'tvshows-list', 'tv');
     displayList(anime, 'anime-list', 'tv');
     displayList(tagalogMovies, 'tagalog-list', 'movie');
-    displayList(tagalogTVShows, 'tagalog-tv-list', 'tv');
     displayList(kDramas, 'kdrama-list', 'tv');
-    displayList(vivamax, 'vivamax-list', 'movie');
 
     renderWatchlistRow();
     renderContinueWatchingRow();
