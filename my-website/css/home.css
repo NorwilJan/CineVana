@@ -1,5 +1,5 @@
 /* =========================================================
-   STREAMVAULT — CLEANED & STREAMLINED HOME DESIGN
+   STREAMVAULT — CLEANED, CACHED & ENHANCED HOME DESIGN
 ========================================================= */
 
 * {
@@ -291,7 +291,7 @@ body.modal-open {
 }
 
 /* =========================================================
-   CONTENT ROWS
+   CONTENT ROWS & ACTIONS
 ========================================================= */
 
 .row {
@@ -325,11 +325,17 @@ body.modal-open {
   background: var(--red);
 }
 
-.see-all-btn {
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.see-all-btn,
+.clear-btn {
   flex-shrink: 0;
   background: transparent;
   border: none;
-  color: #999;
   cursor: pointer;
   font-size: 12px;
   font-weight: 700;
@@ -337,14 +343,32 @@ body.modal-open {
   transition: color 0.2s ease, transform 0.2s ease;
 }
 
+.see-all-btn {
+  color: #999;
+}
+
 .see-all-btn:hover {
   color: #fff;
   transform: translateX(3px);
 }
 
+.clear-btn {
+  color: #e50914;
+}
+
+.clear-btn:hover {
+  color: #ff3b3b;
+}
+
 /* =========================================================
-   HORIZONTAL LIST
+   HORIZONTAL LIST WITH SWIPE & DRAG SUPPORT
 ========================================================= */
+
+.list-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
 
 .list {
   display: flex;
@@ -354,6 +378,13 @@ body.modal-open {
   padding: 4px 2px 12px;
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x proximity;
+  cursor: grab;
+  user-select: none;
+}
+
+.list.dragging {
+  cursor: grabbing;
+  scroll-snap-type: none;
 }
 
 .list::-webkit-scrollbar {
@@ -371,6 +402,7 @@ body.modal-open {
   border: 1px solid rgba(255,255,255,0.04);
   box-shadow: 0 4px 14px rgba(0,0,0,0.35);
   scroll-snap-align: start;
+  pointer-events: auto;
   transition: transform 0.28s ease, box-shadow 0.28s ease, filter 0.28s ease;
 }
 
@@ -378,6 +410,48 @@ body.modal-open {
   transform: translateY(-5px) scale(1.035);
   filter: brightness(1.08);
   box-shadow: 0 12px 28px rgba(0,0,0,0.65);
+}
+
+/* Scroll Arrows for Desktop */
+.scroll-arrow {
+  display: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-60%);
+  z-index: 10;
+  width: 42px;
+  height: 42px;
+  background: rgba(15, 15, 15, 0.82);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+  backdrop-filter: blur(6px);
+  transition: background 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+  opacity: 0.85;
+}
+
+.scroll-arrow:hover {
+  background: var(--red);
+  transform: translateY(-60%) scale(1.08);
+  opacity: 1;
+}
+
+.scroll-arrow.left {
+  left: -18px;
+}
+
+.scroll-arrow.right {
+  right: -18px;
+}
+
+@media (min-width: 768px) {
+  .list-wrapper:hover .scroll-arrow {
+    display: flex;
+  }
 }
 
 /* =========================================================
@@ -985,7 +1059,8 @@ body.modal-open {
     height: 16px;
     width: 3px;
   }
-  .see-all-btn {
+  .see-all-btn,
+  .clear-btn {
     font-size: 11px;
   }
   .list {
