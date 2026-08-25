@@ -399,6 +399,9 @@ async function showDetails(item) {
   } else {
     requestAnimationFrame(() => { loadVideo(); });
   }
+
+  // Render Extra Details (Trailers & Cast)
+  renderExtraDetails(item);
 }
 
 function loadVideo() {
@@ -418,6 +421,66 @@ function loadVideo() {
 
   if (iframe.src === embedURL) return;
   iframe.src = embedURL;
+}
+
+/*
+ * =========================
+ * TRAILERS & CAST
+ * =========================
+ */
+
+async function fetchDetailsExtra(item) {
+  const isTv = item.media_type === 'tv' || !item.title;
+  const endpoint = isTv ? `/tv/${item.id}` : `/movie/${item.id}`;
+  const data = await tmdbFetch(endpoint, { append_to_response: 'credits,videos' });
+  return data;
+}
+
+async function renderExtraDetails(item) {
+  const trailerContainer = document.getElementById('modal-trailer-container');
+  const castContainer = document.getElementById('modal-cast-container');
+  
+  if (trailerContainer) trailerContainer.innerHTML = '';
+  if (castContainer) castContainer.innerHTML = '';
+
+  const data = await fetchDetailsExtra(item);
+  if (!data) return;
+
+  // 1. Render Trailer
+  if (data.videos && data.videos.results) {
+    const trailer = data.videos.results.find(
+      v => v.type === 'Trailer' && v.site === 'YouTube'
+    ) || data.videos.results.find(v => v.site === 'YouTube');
+
+    if (trailer && trailerContainer) {
+      trailerContainer.innerHTML = `
+        <h3>Official Trailer</h3>
+        <div class="trailer-box">
+          <iframe src="https://www.youtube-nocookie.com/embed/${trailer.key}" allowfullscreen></iframe>
+        </div>
+      `;
+    }
+  }
+
+  // 2. Render Cast
+  if (data.credits && data.credits.cast && castContainer) {
+    const topCast = data.credits.cast.slice(0, 10);
+    if (topCast.length > 0) {
+      const castItems = topCast.map(actor => {
+        const profileImg = actor.profile_path 
+          ? `https://image.tmdb.org/t/p/w185${actor.profile_path}` 
+          : PLACEHOLDER_IMG;
+        return `
+          <div class="cast-item">
+            <img src="${profileImg}" alt="${actor.name}" loading="lazy" />
+            <span>${actor.name}</span>
+          </div>
+        `;
+      }).join('');
+
+      castContainer.innerHTML = `<h3>Top Cast</h3><div class="cast-grid">${castItems}</div>`;
+    }
+  }
 }
 
 /*
@@ -512,6 +575,12 @@ function onSeasonChange() {
 function closeModal() {
   const iframe = document.getElementById('modal-video');
   if (iframe) iframe.src = 'about:blank';
+
+  const trailerContainer = document.getElementById('modal-trailer-container');
+  if (trailerContainer) trailerContainer.innerHTML = '';
+
+  const castContainer = document.getElementById('modal-cast-container');
+  if (castContainer) castContainer.innerHTML = '';
 
   const modal = document.getElementById('modal');
   if (modal) modal.classList.remove('active');
