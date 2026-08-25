@@ -455,8 +455,16 @@ body.modal-open {
 }
 
 /* =========================================================
-   WATCHLIST
+   WATCHLIST & SHARE BUTTONS CONTAINER
 ========================================================= */
+
+.modal-actions-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
 
 .watchlist-btn {
   min-height: 40px;
@@ -468,7 +476,6 @@ body.modal-open {
   cursor: pointer;
   font-size: 13px;
   font-weight: 800;
-  margin: 12px 0;
   transition: background 0.2s ease, transform 0.2s ease;
 }
 
@@ -484,6 +491,28 @@ body.modal-open {
 
 .watchlist-btn.remove:hover {
   background: #333;
+}
+
+.share-btn {
+  min-height: 40px;
+  background: #202020;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 9px 18px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.share-btn:hover {
+  background: #2c2c2c;
+  border-color: rgba(255,255,255,0.25);
+  transform: translateY(-1px);
 }
 
 /* =========================================================
