@@ -385,13 +385,23 @@
             id="modal-rating"
           ></div>
 
-          <button
-            id="watchlist-btn"
-            class="watchlist-btn"
-            onclick="toggleWatchlist()"
-          >
-            Add to List
-          </button>
+          <div class="modal-actions-inline">
+            <button
+              id="watchlist-btn"
+              class="watchlist-btn"
+              onclick="toggleWatchlist()"
+            >
+              Add to List
+            </button>
+
+            <!-- NEW: SHARE BUTTON -->
+            <button
+              class="share-btn"
+              onclick="shareCurrentItem()"
+            >
+              <i class="fa-solid fa-share-nodes"></i> Share
+            </button>
+          </div>
 
           <p
             id="modal-description"
@@ -434,7 +444,7 @@
 
       </div>
 
-      <!-- NEW: TRAILER & CAST CONTAINERS -->
+      <!-- TRAILER & CAST CONTAINERS -->
       <div id="modal-trailer-container"></div>
       <div id="modal-cast-container"></div>
 
