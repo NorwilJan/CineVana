@@ -400,7 +400,6 @@ async function showDetails(item) {
     requestAnimationFrame(() => { loadVideo(); });
   }
 
-  // Render Extra Details (Trailers & Cast)
   renderExtraDetails(item);
 }
 
@@ -596,6 +595,37 @@ function closeModal() {
         if (scrollArea) scrollArea.scrollTop = gridScrollPosition;
       });
     }
+  }
+}
+
+/*
+ * =========================
+ * SHARE FEATURE (NEW)
+ * =========================
+ */
+
+function shareCurrentItem() {
+  if (!currentItem) return;
+
+  const title = currentItem.title || currentItem.name || 'Check this out on StreamVault';
+  const overview = currentItem.overview ? currentItem.overview.substring(0, 100) + '...' : '';
+  const shareData = {
+    title: title,
+    text: `Watch "${title}" on StreamVault!\n\n${overview}`,
+    url: window.location.href
+  };
+
+  if (navigator.share) {
+    navigator.share(shareData).catch((err) => {
+      console.log('Error sharing:', err);
+    });
+  } else {
+    const textToCopy = `${shareData.text}\n${shareData.url}`;
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      alert('Link and details copied to clipboard!');
+    }).catch(() => {
+      alert('Unable to share.');
+    });
   }
 }
 
