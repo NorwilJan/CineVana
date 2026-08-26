@@ -258,6 +258,33 @@ function playBanner() {
 
 /*
  * =========================
+ * SURPRISE ME RANDOMIZER
+ * =========================
+ */
+
+function surpriseMe() {
+  const allItems = [
+    ...fullDataCache.movies,
+    ...fullDataCache.tv,
+    ...fullDataCache.anime,
+    ...fullDataCache.tagalog,
+    ...fullDataCache.kdrama
+  ].filter(item => item && item.poster_path);
+
+  if (allItems.length === 0) {
+    alert('Content is still loading. Please try again in a moment!');
+    return;
+  }
+
+  const randomIndex = Math.floor(Math.random() * allItems.length);
+  const randomItem = allItems[randomIndex];
+
+  openedFromGrid = false;
+  showDetails(randomItem);
+}
+
+/*
+ * =========================
  * HORIZONTAL LIST & TOUCH/DRAG SCROLLING
  * =========================
  */
@@ -600,7 +627,7 @@ function closeModal() {
 
 /*
  * =========================
- * SHARE FEATURE (NEW)
+ * SHARE FEATURE
  * =========================
  */
 
