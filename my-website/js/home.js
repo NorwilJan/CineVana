@@ -41,7 +41,7 @@ let fullDataCache = {
 
 /*
  * =========================
- * SEE ALL STATE
+ * SEE ALL STATE & GENRE FILTERING
  * =========================
  */
 
@@ -51,6 +51,7 @@ let gridLoading = false;
 let gridHasMore = true;
 let gridScrollPosition = 0;
 let openedFromGrid = false;
+let gridSelectedGenre = 'all';
 
 const gridPageCache = {};
 
@@ -310,7 +311,7 @@ function displayList(items, containerId, mediaType) {
       img.onerror = null;
       img.src = PLACEHOLDER_IMG;
     };
-    img.onclick = (e) => {
+    img.onclick = () => {
       if (img.dataset.didDrag === 'true') return;
       openedFromGrid = false;
       showDetails(item);
@@ -343,7 +344,7 @@ function setupListInteractions(listEl) {
     listEl.classList.remove('dragging');
   });
 
-  listEl.addEventListener('mouseup', (e) => {
+  listEl.addEventListener('mouseup', () => {
     isDown = false;
     listEl.classList.remove('dragging');
     const images = listEl.querySelectorAll('img');
@@ -472,7 +473,6 @@ async function renderExtraDetails(item) {
   const data = await fetchDetailsExtra(item);
   if (!data) return;
 
-  // 1. Render Trailer
   if (data.videos && data.videos.results) {
     const trailer = data.videos.results.find(
       v => v.type === 'Trailer' && v.site === 'YouTube'
@@ -488,7 +488,6 @@ async function renderExtraDetails(item) {
     }
   }
 
-  // 2. Render Cast
   if (data.credits && data.credits.cast && castContainer) {
     const topCast = data.credits.cast.slice(0, 10);
     if (topCast.length > 0) {
@@ -618,7 +617,7 @@ function closeModal() {
       gridModal.classList.add('active');
       lockBodyScroll();
       requestAnimationFrame(() => {
-        const scrollArea = getGridScrollArea();
+        const scrollArea = document.getElementById('grid-scroll-area');
         if (scrollArea) scrollArea.scrollTop = gridScrollPosition;
       });
     }
@@ -658,7 +657,7 @@ function shareCurrentItem() {
 
 /*
  * =========================
- * WATCHLIST, CONTINUE WATCHING & CLEAR ACTIONS
+ * WATCHLIST, BADGE & CONTINUE WATCHING
  * =========================
  */
 
@@ -674,6 +673,14 @@ function isItemInWatchlist(id) {
   return getWatchlist().some(item => item.id === id);
 }
 
+function updateWatchlistBadge() {
+  const badge = document.getElementById('watchlist-badge');
+  if (!badge) return;
+  const count = getWatchlist().length;
+  badge.textContent = count;
+  badge.style.display = count > 0 ? 'inline-block' : 'none';
+}
+
 function toggleWatchlist() {
   if (!currentItem) return;
   const list = getWatchlist();
@@ -687,6 +694,7 @@ function toggleWatchlist() {
 
   localStorage.setItem('myList', JSON.stringify(list));
   updateWatchlistButton();
+  updateWatchlistBadge();
   renderWatchlistRow();
 }
 
@@ -710,6 +718,7 @@ function renderWatchlistRow() {
 
   row.style.display = list.length ? 'block' : 'none';
   if (list.length) displayList(list, 'watchlist-list', 'movie');
+  updateWatchlistBadge();
 }
 
 function clearWatchlist() {
@@ -719,6 +728,7 @@ function clearWatchlist() {
     const list = document.getElementById('watchlist-list');
     if (list) list.innerHTML = '';
     if (row) row.style.display = 'none';
+    updateWatchlistBadge();
   }
 }
 
@@ -786,7 +796,6 @@ function filterContent(category, eventElement) {
     genreTabsEl.style.display = (category === 'movie' || category === 'tv') ? 'flex' : 'none';
   }
 
-  // Reset genre button selection to "All Genres" when switching category tabs
   const defaultGenreBtn = document.querySelector('.genre-btn');
   if (defaultGenreBtn) {
     document.querySelectorAll('.genre-btn').forEach(btn => btn.classList.remove('active'));
@@ -860,18 +869,15 @@ async function filterByGenre(genreId, eventElement) {
 
 /*
  * =========================
- * SEE ALL GRID MODAL
+ * SEE ALL GRID MODAL & GRID GENRES
  * =========================
  */
-
-function getGridScrollArea() {
-  return document.getElementById('grid-scroll-area') || document.getElementById('grid-modal');
-}
 
 function openGridModal(category) {
   const modal = document.getElementById('grid-modal');
   const titleEl = document.getElementById('grid-modal-title');
   const container = document.getElementById('grid-modal-results');
+  const genreBar = document.getElementById('grid-genre-bar');
   if (!modal || !container) return;
 
   gridCategory = category;
@@ -879,10 +885,23 @@ function openGridModal(category) {
   gridLoading = false;
   gridHasMore = true;
   gridScrollPosition = 0;
+  gridSelectedGenre = 'all';
   openedFromGrid = true;
 
-  const scrollArea = getGridScrollArea();
-  if (scrollArea) scrollArea.scrollTop = 0;
+  // Show/hide grid genre bar depending on category (movies/tv support discover genres)
+  if (genreBar) {
+    genreBar.style.display = (category === 'movies' || category === 'tv') ? 'flex' : 'none';
+    genreBar.querySelectorAll('.genre-btn').forEach((btn, idx) => {
+      if (idx === 0) btn.classList.add('active');
+      else btn.classList.remove('active');
+    });
+  }
+
+  const scrollArea = document.getElementById('grid-scroll-area');
+  if (scrollArea) {
+    scrollArea.scrollTop = 0;
+    scrollArea.onscroll = handleGridScroll;
+  }
 
   const titles = {
     movies: 'Trending Movies',
@@ -900,17 +919,44 @@ function openGridModal(category) {
   loadGridPage();
 }
 
-async function fetchGridPage(category, page) {
-  const cacheKey = `grid_${category}_${page}`;
+async function filterGridByGenre(genreId, eventElement) {
+  document.querySelectorAll('#grid-genre-bar .genre-btn').forEach(btn => btn.classList.remove('active'));
+  if (eventElement) eventElement.classList.add('active');
+
+  gridSelectedGenre = genreId;
+  gridPage = 1;
+  gridHasMore = true;
+
+  const container = document.getElementById('grid-modal-results');
+  if (container) container.innerHTML = '';
+
+  const scrollArea = document.getElementById('grid-scroll-area');
+  if (scrollArea) scrollArea.scrollTop = 0;
+
+  loadGridPage();
+}
+
+async function fetchGridPage(category, page, genre) {
+  const cacheKey = `grid_${category}_${page}_${genre}`;
   if (gridPageCache[cacheKey]) return gridPageCache[cacheKey];
 
   let data = null;
+  const genreParam = genre !== 'all' ? genre : undefined;
+
   switch (category) {
     case 'movies':
-      data = await tmdbFetch('/trending/movie/week', { page });
+      if (genreParam) {
+        data = await tmdbFetch('/discover/movie', { with_genres: genreParam, sort_by: 'popularity.desc', page });
+      } else {
+        data = await tmdbFetch('/trending/movie/week', { page });
+      }
       break;
     case 'tv':
-      data = await tmdbFetch('/trending/tv/week', { page });
+      if (genreParam) {
+        data = await tmdbFetch('/discover/tv', { with_genres: genreParam, sort_by: 'popularity.desc', page });
+      } else {
+        data = await tmdbFetch('/trending/tv/week', { page });
+      }
       break;
     case 'anime':
       data = await tmdbFetch('/discover/tv', {
@@ -959,16 +1005,20 @@ async function loadGridPage() {
     return;
   }
 
-  const loading = document.createElement('div');
-  loading.className = 'grid-loading active';
-  loading.textContent = 'Loading...';
-  container.appendChild(loading);
+  const loading = document.getElementById('grid-loading');
+  if (loading) loading.classList.add('active');
 
   try {
-    const data = await fetchGridPage(gridCategory, gridPage);
-    loading.remove();
+    const data = await fetchGridPage(gridCategory, gridPage, gridSelectedGenre);
+    if (loading) loading.classList.remove('active');
 
     const results = data.results || [];
+    if (results.length === 0 && gridPage === 1) {
+      gridHasMore = false;
+      container.innerHTML = `<p style="grid-column: 1 / -1; text-align: center; color: #777; padding: 40px 0;">No titles found.</p>`;
+      return;
+    }
+
     if (results.length === 0) {
       gridHasMore = false;
       showGridEnd();
@@ -993,7 +1043,7 @@ async function loadGridPage() {
         img.src = PLACEHOLDER_IMG;
       };
       img.onclick = () => {
-        const scrollArea = getGridScrollArea();
+        const scrollArea = document.getElementById('grid-scroll-area');
         if (scrollArea) gridScrollPosition = scrollArea.scrollTop;
 
         const gridModal = document.getElementById('grid-modal');
@@ -1014,7 +1064,7 @@ async function loadGridPage() {
     }
   } catch (error) {
     console.error('Grid loading error:', error);
-    loading.remove();
+    if (loading) loading.classList.remove('active');
   } finally {
     gridLoading = false;
   }
@@ -1031,7 +1081,7 @@ function showGridEnd() {
 }
 
 function handleGridScroll() {
-  const scrollArea = getGridScrollArea();
+  const scrollArea = document.getElementById('grid-scroll-area');
   if (!scrollArea) return;
 
   const distanceFromBottom = scrollArea.scrollHeight - scrollArea.scrollTop - scrollArea.clientHeight;
@@ -1049,7 +1099,7 @@ function closeGridModal() {
 
 /*
  * =========================
- * SEARCH MODAL
+ * SEARCH MODAL & EMPTY STATE
  * =========================
  */
 
@@ -1095,8 +1145,14 @@ async function searchTMDB() {
     if (!data) return;
 
     container.innerHTML = '';
-    (data.results || []).forEach(item => {
-      if (!item.poster_path || item.media_type === 'person') return;
+    const results = (data.results || []).filter(item => item.poster_path && item.media_type !== 'person');
+
+    if (results.length === 0) {
+      container.innerHTML = `<p style="grid-column: 1 / -1; text-align: center; color: #777; padding: 40px 0;">No results found for "${query}"</p>`;
+      return;
+    }
+
+    results.forEach(item => {
       if (!item.media_type) {
         item.media_type = item.title ? 'movie' : 'tv';
       }
@@ -1164,15 +1220,18 @@ async function init() {
 
     renderWatchlistRow();
     renderContinueWatchingRow();
+    updateWatchlistBadge();
   } catch (error) {
     console.error('Initialization error:', error);
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const scrollArea = getGridScrollArea();
-  if (scrollArea) {
-    scrollArea.addEventListener('scroll', handleGridScroll, { passive: true });
+// Global Keyboard Escape Listener
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeModal();
+    closeGridModal();
+    closeSearchModal();
   }
 });
 
