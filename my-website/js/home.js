@@ -16,7 +16,6 @@ async function filterContent(category, eventElement) {
   // Show/Hide Genre bar based on category availability
   const genreTabsEl = document.getElementById('genre-tabs');
   if (genreTabsEl) {
-    // Allow genres for movies, tv, anime, kdrama, and tagalog
     genreTabsEl.style.display = ['movie', 'tv', 'kdrama', 'anime', 'tagalog'].includes(category) ? 'flex' : 'none';
   }
 
@@ -29,7 +28,6 @@ async function filterContent(category, eventElement) {
   document.querySelectorAll('.content-row').forEach(row => row.style.display = 'none');
 
   if (category === 'all') {
-    // Show main default rows
     document.getElementById('movies-row').style.display = 'block';
     document.getElementById('tvshows-row').style.display = 'block';
     displayList(fullDataCache.movies, 'movies-list', 'movie');
@@ -39,12 +37,10 @@ async function filterContent(category, eventElement) {
     displayList(fullDataCache.movies, 'movies-list', 'movie');
   } else if (category === 'tv' || category === 'kdrama') {
     document.getElementById('tvshows-row').style.display = 'block';
-    // If KDrama, you can fetch or filter KDramas specifically here if desired
     displayList(fullDataCache.tv, 'tvshows-list', 'tv');
   } else if (category === 'anime') {
     let animeRow = document.getElementById('anime-row');
     if (animeRow) animeRow.style.display = 'block';
-    // Fetch or display anime list cache
     fetchAndDisplayAnime();
   } else if (category === 'tagalog') {
     let tagalogRow = document.getElementById('tagalog-row');
@@ -53,7 +49,7 @@ async function filterContent(category, eventElement) {
   }
 }
 
-// --- GENRE FILTERING (Fixes Movies, TV, Anime, & Tagalog genres) ---
+// --- GENRE FILTERING (Covers Movies, TV, Anime, & Tagalog genres) ---
 async function filterByGenre(genreId, eventElement) {
   document.querySelectorAll('.genre-btn').forEach(btn => btn.classList.remove('active'));
   if (eventElement) eventElement.classList.add('active');
@@ -63,7 +59,7 @@ async function filterByGenre(genreId, eventElement) {
   let rowElementId = 'movies-row';
   let extraParams = {};
 
-  // Map the active category tab to correct endpoints, targets, and parameters
+  // Map active category tab to correct target endpoints, lists, and metadata filters
   if (currentTabCategory === 'tv' || currentTabCategory === 'kdrama') {
     targetMediaType = 'tv';
     targetRowId = 'tvshows-list';
@@ -72,7 +68,7 @@ async function filterByGenre(genreId, eventElement) {
     targetMediaType = 'tv';
     targetRowId = 'anime-list';
     rowElementId = 'anime-row';
-    extraParams = { with_genres: '16' }; // Animation genre baseline for anime
+    extraParams = { with_genres: '16', with_original_language: 'ja' };
   } else if (currentTabCategory === 'tagalog') {
     targetMediaType = 'movie';
     targetRowId = 'tagalog-list';
@@ -85,7 +81,7 @@ async function filterByGenre(genreId, eventElement) {
 
   const endpoint = targetMediaType === 'movie' ? '/discover/movie' : '/discover/tv';
 
-  // Isolate and show only the relevant content row
+  // Isolate and show only the active target row
   document.querySelectorAll('.content-row').forEach(row => row.style.display = 'none');
   const rowEl = document.getElementById(rowElementId);
   if (rowEl) rowEl.style.display = 'block';
@@ -104,7 +100,7 @@ async function filterByGenre(genreId, eventElement) {
     return;
   }
 
-  // Fetch from TMDB combining genre + context parameters (e.g., Tagalog language tag)
+  // Fetch filtered data from TMDB combining genre + required language/region parameters
   const data = await tmdbFetch(endpoint, {
     with_genres: genreId,
     sort_by: 'popularity.desc',
@@ -136,8 +132,8 @@ async function fetchAndDisplayTagalog() {
 
 async function fetchAndDisplayAnime() {
   const data = await tmdbFetch('/discover/tv', {
-    with_genres: '16', // Animation
-    with_original_language: 'ja', // Japanese language for anime
+    with_genres: '16',
+    with_original_language: 'ja',
     sort_by: 'popularity.desc',
     page: 1
   });
