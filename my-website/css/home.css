@@ -394,6 +394,7 @@ body.modal-open {
 .list img {
   width: 135px;
   height: 202px;
+  aspect-ratio: 2 / 3;
   flex: 0 0 135px;
   object-fit: cover;
   border-radius: 7px;
