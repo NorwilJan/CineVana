@@ -688,7 +688,10 @@ function renderWatchlistRow() {
 function clearWatchlist() {
   if (confirm('Are you sure you want to clear your My List?')) {
     localStorage.removeItem('myList');
-    renderWatchlistRow();
+    const row = document.getElementById('watchlist-row');
+    const list = document.getElementById('watchlist-list');
+    if (list) list.innerHTML = '';
+    if (row) row.style.display = 'none';
   }
 }
 
@@ -732,7 +735,10 @@ function renderContinueWatchingRow() {
 function clearContinueWatching() {
   if (confirm('Are you sure you want to clear your watch history?')) {
     localStorage.removeItem('continueWatching');
-    renderContinueWatchingRow();
+    const row = document.getElementById('continue-row');
+    const list = document.getElementById('continue-list');
+    if (list) list.innerHTML = '';
+    if (row) row.style.display = 'none';
   }
 }
 
