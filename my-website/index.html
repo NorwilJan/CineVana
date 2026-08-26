@@ -1,40 +1,68 @@
-<!-- Category Tabs Nav Bar -->
-<div class="category-tabs">
-  <button class="tab-btn active" onclick="filterContent('all', this)">All</button>
-  <button class="tab-btn" onclick="filterContent('movie', this)">Movies</button>
-  <button class="tab-btn" onclick="filterContent('tv', this)">TV Shows</button>
-  <button class="tab-btn" onclick="filterContent('kdrama', this)">KDrama</button>
-  <button class="tab-btn" onclick="filterContent('anime', this)">Anime</button>
-  <button class="tab-btn" onclick="filterContent('tagalog', this)">Tagalog</button>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Streaming App</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body onload="initApp()">
 
-<!-- Dynamic Genre Filter Bar -->
-<div id="genre-tabs" class="genre-tabs-container" style="display: flex;">
-  <button class="genre-btn active" data-genre="all" onclick="filterByGenre('all', this)">All Genres</button>
-  <button class="genre-btn" data-genre="28" onclick="filterByGenre('28', this)">Action</button>
-  <button class="genre-btn" data-genre="35" onclick="filterByGenre('35', this)">Comedy</button>
-  <button class="genre-btn" data-genre="18" onclick="filterByGenre('18', this)">Drama</button>
-  <button class="genre-btn" data-genre="27" onclick="filterByGenre('27', this)">Horror</button>
-  <button class="genre-btn" data-genre="10749" onclick="filterByGenre('10749', this)">Romance</button>
-</div>
+  <!-- Main App Container -->
+  <div class="app-container">
 
-<!-- Dynamic Content Sections / Rows Container -->
-<div id="movies-row" class="content-row">
-  <h2>Trending Movies</h2>
-  <div id="movies-list" class="movie-slider"></div>
-</div>
+    <!-- Category Tabs Navigation -->
+    <header class="navigation-header">
+      <div class="category-tabs">
+        <button class="tab-btn active" onclick="filterContent('all', this)">All</button>
+        <button class="tab-btn" onclick="filterContent('movie', this)">Movies</button>
+        <button class="tab-btn" onclick="filterContent('tv', this)">TV Shows</button>
+        <button class="tab-btn" onclick="filterContent('kdrama', this)">KDrama</button>
+        <button class="tab-btn" onclick="filterContent('anime', this)">Anime</button>
+        <button class="tab-btn" onclick="filterContent('tagalog', this)">Tagalog</button>
+      </div>
 
-<div id="tvshows-row" class="content-row">
-  <h2>Trending TV Shows</h2>
-  <div id="tvshows-list" class="movie-slider"></div>
-</div>
+      <!-- Dynamic Genre Filter Bar -->
+      <div id="genre-tabs" class="genre-tabs-container" style="display: flex;">
+        <button class="genre-btn active" data-genre="all" onclick="filterByGenre('all', this)">All Genres</button>
+        <button class="genre-btn" data-genre="28" onclick="filterByGenre('28', this)">Action</button>
+        <button class="genre-btn" data-genre="35" onclick="filterByGenre('35', this)">Comedy</button>
+        <button class="genre-btn" data-genre="18" onclick="filterByGenre('18', this)">Drama</button>
+        <button class="genre-btn" data-genre="27" onclick="filterByGenre('27', this)">Horror</button>
+        <button class="genre-btn" data-genre="10749" onclick="filterByGenre('10749', this)">Romance</button>
+      </div>
+    </header>
 
-<div id="anime-row" class="content-row" style="display: none;">
-  <h2>Popular Anime</h2>
-  <div id="anime-list" class="movie-slider"></div>
-</div>
+    <!-- Content Sections / Rows Container -->
+    <main class="content-main">
+      <!-- Movies Row -->
+      <section id="movies-row" class="content-row">
+        <h2>Trending Movies</h2>
+        <div id="movies-list" class="movie-slider"></div>
+      </section>
 
-<div id="tagalog-row" class="content-row" style="display: none;">
-  <h2>Pinoy & Tagalog Movies</h2>
-  <div id="tagalog-list" class="movie-slider"></div>
-</div>
+      <!-- TV Shows Row -->
+      <section id="tvshows-row" class="content-row">
+        <h2>Trending TV Shows</h2>
+        <div id="tvshows-list" class="movie-slider"></div>
+      </section>
+
+      <!-- Anime Row -->
+      <section id="anime-row" class="content-row" style="display: none;">
+        <h2>Popular Anime</h2>
+        <div id="anime-list" class="movie-slider"></div>
+      </section>
+
+      <!-- Tagalog/Pinoy Movies Row -->
+      <section id="tagalog-row" class="content-row" style="display: none;">
+        <h2>Pinoy & Tagalog Movies</h2>
+        <div id="tagalog-list" class="movie-slider"></div>
+      </section>
+    </main>
+
+  </div>
+
+  <!-- Script Inclusion -->
+  <script src="Home.js"></script>
+</body>
+</html>
