@@ -771,7 +771,7 @@ function clearContinueWatching() {
 
 /*
  * =========================
- * CATEGORY FILTER
+ * CATEGORY & GENRE FILTERS
  * =========================
  */
 
@@ -780,6 +780,18 @@ function filterContent(category, eventElement) {
 
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
   if (eventElement) eventElement.classList.add('active');
+
+  const genreTabsEl = document.getElementById('genre-tabs');
+  if (genreTabsEl) {
+    genreTabsEl.style.display = (category === 'movie' || category === 'tv') ? 'flex' : 'none';
+  }
+
+  // Reset genre button selection to "All Genres" when switching category tabs
+  const defaultGenreBtn = document.querySelector('.genre-btn');
+  if (defaultGenreBtn) {
+    document.querySelectorAll('.genre-btn').forEach(btn => btn.classList.remove('active'));
+    defaultGenreBtn.classList.add('active');
+  }
 
   const rows = {
     continue: document.getElementById('continue-row'),
@@ -814,6 +826,35 @@ function filterContent(category, eventElement) {
     });
   } else if (category === 'anime') {
     if (rows.anime) rows.anime.style.display = 'block';
+  }
+}
+
+async function filterByGenre(genreId, eventElement) {
+  document.querySelectorAll('.genre-btn').forEach(btn => btn.classList.remove('active'));
+  if (eventElement) eventElement.classList.add('active');
+
+  const targetRowId = currentTabCategory === 'movie' ? 'movies-list' : 'tvshows-list';
+  const endpoint = currentTabCategory === 'movie' ? '/discover/movie' : '/discover/tv';
+
+  if (genreId === 'all') {
+    if (currentTabCategory === 'movie') {
+      displayList(fullDataCache.movies, 'movies-list', 'movie');
+    } else {
+      displayList(fullDataCache.tv, 'tvshows-list', 'tv');
+    }
+    return;
+  }
+
+  const data = await tmdbFetch(endpoint, {
+    with_genres: genreId,
+    sort_by: 'popularity.desc',
+    page: 1
+  });
+
+  if (data && Array.isArray(data.results)) {
+    const mediaType = currentTabCategory === 'movie' ? 'movie' : 'tv';
+    data.results.forEach(item => { item.media_type = mediaType; });
+    displayList(data.results, targetRowId, mediaType);
   }
 }
 
@@ -1017,7 +1058,9 @@ function openSearchModal() {
   const input = document.getElementById('search-input');
   if (modal) modal.classList.add('active');
   lockBodyScroll();
-  if (input) input.focus();
+  if (input) {
+    setTimeout(() => input.focus(), 100);
+  }
 }
 
 function closeSearchModal() {
