@@ -152,6 +152,15 @@
         Continue Watching
       </h2>
 
+      <div class="row-actions">
+        <button
+          class="clear-btn"
+          onclick="clearContinueWatching()"
+        >
+          Clear History
+        </button>
+      </div>
+
     </div>
 
     <div
@@ -177,6 +186,15 @@
       <h2>
         My List
       </h2>
+
+      <div class="row-actions">
+        <button
+          class="clear-btn"
+          onclick="clearWatchlist()"
+        >
+          Clear List
+        </button>
+      </div>
 
     </div>
 
@@ -394,7 +412,7 @@
               Add to List
             </button>
 
-            <!-- NEW: SHARE BUTTON -->
+            <!-- SHARE BUTTON -->
             <button
               class="share-btn"
               onclick="shareCurrentItem()"
