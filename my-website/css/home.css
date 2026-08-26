@@ -111,6 +111,24 @@ body.modal-open {
   transform: scaleX(1);
 }
 
+/* Watchlist Nav Badge */
+.nav-badge-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-badge {
+  background: var(--red);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
 /* =========================================================
    SURPRISE ME BUTTON (NAVBAR)
 ========================================================= */
@@ -923,6 +941,22 @@ body.modal-open {
   position: absolute;
   top: 12px;
   right: 18px;
+}
+
+/* Grid Genre Tabs */
+.grid-genre-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: rgba(15,15,15,0.9);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.grid-genre-bar::-webkit-scrollbar {
+  display: none;
 }
 
 /* =========================================================
