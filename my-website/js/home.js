@@ -5,6 +5,33 @@ let fullDataCache = {
   tv: []
 };
 
+// --- INITIALIZATION ---
+// Call this on page load to populate your initial cache and render default content
+async function initApp() {
+  try {
+    // Fetch initial trending movies and TV shows from TMDB
+    const [moviesData, tvData] = await Promise.all([
+      tmdbFetch('/trending/movie/day', { page: 1 }),
+      tmdbFetch('/trending/tv/day', { page: 1 })
+    ]);
+
+    if (moviesData && Array.isArray(moviesData.results)) {
+      moviesData.results.forEach(item => { item.media_type = 'movie'; });
+      fullDataCache.movies = moviesData.results;
+    }
+
+    if (tvData && Array.isArray(tvData.results)) {
+      tvData.results.forEach(item => { item.media_type = 'tv'; });
+      fullDataCache.tv = tvData.results;
+    }
+
+    // Render initial state
+    filterContent('all', document.querySelector('.tab-btn.active'));
+  } catch (error) {
+    console.error('Failed to initialize app data:', error);
+  }
+}
+
 // --- TAB SWITCHING & CATEGORY FILTERING ---
 async function filterContent(category, eventElement) {
   currentTabCategory = category;
