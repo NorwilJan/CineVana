@@ -2,14 +2,14 @@ const API_KEY = 'c5f2e226dd2ee0c8ed2c272a0ebaf049';
 const BASE_URL = 'https://api.themoviedb.org/3';
 
 /*
- * PERFORMANCE & IMAGE SIZES
+ * PERFORMANCE
  */
 const POSTER_URL = 'https://image.tmdb.org/t/p/w342';
 const MODAL_POSTER_URL = 'https://image.tmdb.org/t/p/w500';
 const BACKDROP_URL = 'https://image.tmdb.org/t/p/original';
 
 const PLACEHOLDER_IMG =
-  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="130" height="195" fill="%231a1a1a"><rect width="100%" height="100%"/></svg>';
+  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="130" height="195" fill="%23222"><rect width="100%" height="100%"/></svg>';
 
 let currentItem = null;
 let bannerItem = null;
@@ -17,7 +17,6 @@ let bannerItem = null;
 let currentSeason = 1;
 let currentEpisode = 1;
 let currentTabCategory = 'all'; 
-let currentServer = 'videasy';
 
 let searchTimeout = null;
 let lastScrollPosition = 0;
@@ -81,7 +80,10 @@ function getCachedApiData(key) {
 
 function setCachedApiData(key, data) {
   try {
-    const cachePayload = { data, timestamp: Date.now() };
+    const cachePayload = {
+      data,
+      timestamp: Date.now()
+    };
     localStorage.setItem(`cache_${key}`, JSON.stringify(cachePayload));
   } catch (e) {
     console.error('Error setting API cache:', e);
@@ -141,7 +143,10 @@ async function tmdbFetch(endpoint, params = {}) {
     });
 
     const response = await fetch(url.toString());
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.error(`TMDB error ${response.status}:`, endpoint);
+      return null;
+    }
     return await response.json();
   } catch (error) {
     console.error('TMDB request error:', error);
@@ -238,7 +243,7 @@ function displayBanner(item) {
   const titleEl = document.getElementById('banner-title');
 
   if (bannerEl) {
-    bannerEl.style.backgroundImage = `linear-gradient(to top, #070707 10%, rgba(7,7,7,0.4) 60%, rgba(7,7,7,0.85)), url(${getBackdropUrl(item.backdrop_path)})`;
+    bannerEl.style.backgroundImage = `linear-gradient(to top, #111 10%, rgba(17,17,17,0.4) 60%, rgba(17,17,17,0.8)), url(${getBackdropUrl(item.backdrop_path)})`;
   }
   if (titleEl) {
     titleEl.textContent = item.title || item.name || '';
@@ -399,7 +404,7 @@ async function showDetails(item) {
 
   if (rating) {
     const stars = item.vote_average ? Math.round(item.vote_average / 2) : 0;
-    rating.innerHTML = '★'.repeat(stars) + '☆'.repeat(5 - stars);
+    rating.innerHTML = '★'.repeat(stars);
   }
 
   updateWatchlistButton();
@@ -426,14 +431,6 @@ async function showDetails(item) {
   renderExtraDetails(item);
 }
 
-function switchServer(serverName) {
-  currentServer = serverName;
-  document.querySelectorAll('.server-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.server === serverName);
-  });
-  loadVideo();
-}
-
 function loadVideo() {
   if (!currentItem) return;
 
@@ -443,25 +440,10 @@ function loadVideo() {
   const isTv = currentItem.media_type === 'tv' || !currentItem.title;
   let embedURL = '';
 
-  if (currentServer === 'vidsrc') {
-    if (isTv) {
-      embedURL = `https://vidsrc.xyz/embed/tv?tmdb=${currentItem.id}&season=${currentSeason}&episode=${currentEpisode}`;
-    } else {
-      embedURL = `https://vidsrc.xyz/embed/movie?tmdb=${currentItem.id}`;
-    }
-  } else if (currentServer === 'vidsrcpro') {
-    if (isTv) {
-      embedURL = `https://vidsrc.pro/embed/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
-    } else {
-      embedURL = `https://vidsrc.pro/embed/movie/${currentItem.id}`;
-    }
+  if (isTv) {
+    embedURL = `https://player.videasy.net/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
   } else {
-    // Default: Videasy
-    if (isTv) {
-      embedURL = `https://player.videasy.net/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
-    } else {
-      embedURL = `https://player.videasy.net/movie/${currentItem.id}`;
-    }
+    embedURL = `https://player.videasy.net/movie/${currentItem.id}`;
   }
 
   if (iframe.src === embedURL) return;
@@ -477,7 +459,8 @@ function loadVideo() {
 async function fetchDetailsExtra(item) {
   const isTv = item.media_type === 'tv' || !item.title;
   const endpoint = isTv ? `/tv/${item.id}` : `/movie/${item.id}`;
-  return await tmdbFetch(endpoint, { append_to_response: 'credits,videos' });
+  const data = await tmdbFetch(endpoint, { append_to_response: 'credits,videos' });
+  return data;
 }
 
 async function renderExtraDetails(item) {
@@ -659,17 +642,22 @@ function shareCurrentItem() {
   };
 
   if (navigator.share) {
-    navigator.share(shareData).catch(() => {});
+    navigator.share(shareData).catch((err) => {
+      console.log('Error sharing:', err);
+    });
   } else {
-    navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`).then(() => {
+    const textToCopy = `${shareData.text}\n${shareData.url}`;
+    navigator.clipboard.writeText(textToCopy).then(() => {
       alert('Link and details copied to clipboard!');
+    }).catch(() => {
+      alert('Unable to share.');
     });
   }
 }
 
 /*
  * =========================
- * WATCHLIST & CONTINUE WATCHING
+ * WATCHLIST, BADGE & CONTINUE WATCHING
  * =========================
  */
 
@@ -900,6 +888,7 @@ function openGridModal(category) {
   gridSelectedGenre = 'all';
   openedFromGrid = true;
 
+  // Show/hide grid genre bar depending on category (movies/tv support discover genres)
   if (genreBar) {
     genreBar.style.display = (category === 'movies' || category === 'tv') ? 'flex' : 'none';
     genreBar.querySelectorAll('.genre-btn').forEach((btn, idx) => {
@@ -956,25 +945,46 @@ async function fetchGridPage(category, page, genre) {
 
   switch (category) {
     case 'movies':
-      data = genreParam 
-        ? await tmdbFetch('/discover/movie', { with_genres: genreParam, sort_by: 'popularity.desc', page })
-        : await tmdbFetch('/trending/movie/week', { page });
+      if (genreParam) {
+        data = await tmdbFetch('/discover/movie', { with_genres: genreParam, sort_by: 'popularity.desc', page });
+      } else {
+        data = await tmdbFetch('/trending/movie/week', { page });
+      }
       break;
     case 'tv':
-      data = genreParam 
-        ? await tmdbFetch('/discover/tv', { with_genres: genreParam, sort_by: 'popularity.desc', page })
-        : await tmdbFetch('/trending/tv/week', { page });
+      if (genreParam) {
+        data = await tmdbFetch('/discover/tv', { with_genres: genreParam, sort_by: 'popularity.desc', page });
+      } else {
+        data = await tmdbFetch('/trending/tv/week', { page });
+      }
       break;
     case 'anime':
-      data = await tmdbFetch('/discover/tv', { with_original_language: 'ja', with_genres: 16, sort_by: 'popularity.desc', page });
-      if (data && Array.isArray(data.results)) data.results.forEach(item => { item.media_type = 'tv'; });
+      data = await tmdbFetch('/discover/tv', {
+        with_original_language: 'ja',
+        with_genres: 16,
+        sort_by: 'popularity.desc',
+        page
+      });
+      if (data && Array.isArray(data.results)) {
+        data.results.forEach(item => { item.media_type = 'tv'; });
+      }
       break;
     case 'tagalog':
-      data = await tmdbFetch('/discover/movie', { with_original_language: 'tl', sort_by: 'popularity.desc', page });
+      data = await tmdbFetch('/discover/movie', {
+        with_original_language: 'tl',
+        sort_by: 'popularity.desc',
+        page
+      });
       break;
     case 'kdrama':
-      data = await tmdbFetch('/discover/tv', { with_original_language: 'ko', sort_by: 'popularity.desc', page });
-      if (data && Array.isArray(data.results)) data.results.forEach(item => { item.media_type = 'tv'; });
+      data = await tmdbFetch('/discover/tv', {
+        with_original_language: 'ko',
+        sort_by: 'popularity.desc',
+        page
+      });
+      if (data && Array.isArray(data.results)) {
+        data.results.forEach(item => { item.media_type = 'tv'; });
+      }
       break;
     default:
       data = { results: [], total_pages: 0 };
@@ -990,7 +1000,10 @@ async function loadGridPage() {
   gridLoading = true;
 
   const container = document.getElementById('grid-modal-results');
-  if (!container) { gridLoading = false; return; }
+  if (!container) {
+    gridLoading = false;
+    return;
+  }
 
   const loading = document.getElementById('grid-loading');
   if (loading) loading.classList.add('active');
@@ -1014,14 +1027,21 @@ async function loadGridPage() {
 
     results.forEach(item => {
       if (!item.poster_path) return;
-      item.media_type = (gridCategory === 'movies' || gridCategory === 'tagalog') ? 'movie' : 'tv';
+      if (gridCategory === 'movies' || gridCategory === 'tagalog') {
+        item.media_type = 'movie';
+      } else {
+        item.media_type = 'tv';
+      }
 
       const img = document.createElement('img');
       img.src = getPosterUrl(item.poster_path);
       img.alt = item.title || item.name || '';
       img.loading = 'lazy';
       img.decoding = 'async';
-      img.onerror = () => { img.onerror = null; img.src = PLACEHOLDER_IMG; };
+      img.onerror = () => {
+        img.onerror = null;
+        img.src = PLACEHOLDER_IMG;
+      };
       img.onclick = () => {
         const scrollArea = document.getElementById('grid-scroll-area');
         if (scrollArea) gridScrollPosition = scrollArea.scrollTop;
@@ -1079,7 +1099,7 @@ function closeGridModal() {
 
 /*
  * =========================
- * SEARCH MODAL
+ * SEARCH MODAL & EMPTY STATE
  * =========================
  */
 
@@ -1088,7 +1108,9 @@ function openSearchModal() {
   const input = document.getElementById('search-input');
   if (modal) modal.classList.add('active');
   lockBodyScroll();
-  if (input) setTimeout(() => input.focus(), 100);
+  if (input) {
+    setTimeout(() => input.focus(), 100);
+  }
 }
 
 function closeSearchModal() {
@@ -1104,7 +1126,7 @@ function closeSearchModal() {
 
 function debounceSearch() {
   clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(searchTMDB, 300);
+  searchTimeout = setTimeout(searchTMDB, 350);
 }
 
 async function searchTMDB() {
@@ -1131,14 +1153,19 @@ async function searchTMDB() {
     }
 
     results.forEach(item => {
-      if (!item.media_type) item.media_type = item.title ? 'movie' : 'tv';
+      if (!item.media_type) {
+        item.media_type = item.title ? 'movie' : 'tv';
+      }
 
       const img = document.createElement('img');
       img.src = getPosterUrl(item.poster_path);
       img.alt = item.title || item.name || '';
       img.loading = 'lazy';
       img.decoding = 'async';
-      img.onerror = () => { img.onerror = null; img.src = PLACEHOLDER_IMG; };
+      img.onerror = () => {
+        img.onerror = null;
+        img.src = PLACEHOLDER_IMG;
+      };
       img.onclick = () => {
         closeSearchModal();
         openedFromGrid = false;
@@ -1159,7 +1186,13 @@ async function searchTMDB() {
 
 async function init() {
   try {
-    const [movies, tvShows, anime, tagalogMovies, kDramas] = await Promise.all([
+    const [
+      movies,
+      tvShows,
+      anime,
+      tagalogMovies,
+      kDramas
+    ] = await Promise.all([
       fetchTrending('movie'),
       fetchTrending('tv'),
       fetchTrendingAnime(),
@@ -1167,10 +1200,16 @@ async function init() {
       fetchKDramas()
     ]);
 
-    fullDataCache = { movies, tv: tvShows, anime, tagalog: tagalogMovies, kdrama: kDramas };
+    fullDataCache = {
+      movies,
+      tv: tvShows,
+      anime,
+      tagalog: tagalogMovies,
+      kdrama: kDramas
+    };
 
     if (movies.length > 0) {
-      displayBanner(movies[Math.floor(Math.random() * Math.min(5, movies.length))]);
+      displayBanner(movies[Math.floor(Math.random() * movies.length)]);
     }
 
     displayList(movies, 'movies-list', 'movie');
@@ -1187,6 +1226,7 @@ async function init() {
   }
 }
 
+// Global Keyboard Escape Listener
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     closeModal();
