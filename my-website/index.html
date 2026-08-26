@@ -57,6 +57,11 @@
         Home
       </a>
 
+      <!-- WATCHLIST LINK WITH BADGE -->
+      <a href="#watchlist-row" class="nav-badge-link">
+        My List <span id="watchlist-badge" class="nav-badge" style="display:none;">0</span>
+      </a>
+
       <!-- SURPRISE ME BUTTON -->
       <button class="surprise-nav-btn" onclick="surpriseMe()" title="Surprise Me!">
         <i class="fa-solid fa-shuffle"></i> <span>Surprise Me</span>
@@ -513,6 +518,17 @@
         &times;
       </span>
 
+    </div>
+
+    <!-- GRID GENRE FILTER BAR -->
+    <div class="grid-genre-bar" id="grid-genre-bar" style="display:none;">
+      <button class="genre-btn active" onclick="filterGridByGenre('all', this)">All Genres</button>
+      <button class="genre-btn" onclick="filterGridByGenre(28, this)">Action</button>
+      <button class="genre-btn" onclick="filterGridByGenre(35, this)">Comedy</button>
+      <button class="genre-btn" onclick="filterGridByGenre(27, this)">Horror</button>
+      <button class="genre-btn" onclick="filterGridByGenre(878, this)">Sci-Fi</button>
+      <button class="genre-btn" onclick="filterGridByGenre(18, this)">Drama</button>
+      <button class="genre-btn" onclick="filterGridByGenre(10749, this)">Romance</button>
     </div>
 
 
