@@ -324,6 +324,49 @@ body.modal-open {
 }
 
 /* =========================================================
+   GENRE SUB-FILTERS
+========================================================= */
+
+.genre-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.genre-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.genre-btn {
+  flex-shrink: 0;
+  background: #141414;
+  color: #888;
+  border: 1px solid rgba(255,255,255,0.05);
+  padding: 6px 14px;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.genre-btn:hover {
+  background: #222;
+  color: #ddd;
+}
+
+.genre-btn.active {
+  background: #333;
+  color: #fff;
+  border-color: rgba(255,255,255,0.2);
+}
+
+/* =========================================================
    CONTENT ROWS & ACTIONS
 ========================================================= */
 
@@ -1186,6 +1229,10 @@ body.modal-open {
     padding: 10px 18px;
   }
   .filter-tabs {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  .genre-tabs {
     padding-left: 15px;
     padding-right: 15px;
   }
